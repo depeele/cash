@@ -40,7 +40,10 @@ cash.fn.extend({
       return cash( selector && this.has(selector).length ? selector : null );
     }
 
-    const elems = this.map(el => cash.find(selector, el) );
+    const elems = [];
+    this.each(el => {
+      elems.push.apply( elems, cash.find(selector, el) );
+    } );
 
     return cash.unique(elems);
   },
