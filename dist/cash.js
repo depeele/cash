@@ -273,9 +273,11 @@
   
     removeData(key) {
       return this.each(el => _removeData(el,key) );
-    }
-  
+    },
   });
+  
+  cash.getData = _getData;
+  cash.setData = _setData;
   
   /* jshint laxbreak: true */
   const _notWhiteRe = /\S+/g;
@@ -310,7 +312,7 @@
         classes
           ? this.each(el => {
               const spacedName = ` ${el.className} `;
-              cash.each( (classes,cls) => { _addClass(el,cls,spacedName); });
+              cash.each( classes, cls => { _addClass(el,cls,spacedName); });
             })
           : this
       );
@@ -452,8 +454,8 @@
     },
   
     index(elem) {
-      const child       = elem ? cash(elem)[0] : this[0];
-      const collection  = elem ? this : cash(child).parent().children();
+      const child       = (elem ? cash(elem)[0] : this[0]);
+      const collection  = (elem ? this : cash(child).parent().children());
       return slice.call( collection ).indexOf(child);
     },
   
@@ -534,11 +536,11 @@
   
     const lower = prop.toLowerCase();
   
-    fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
+    cash.fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
   
-    fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
+    cash.fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
   
-    fn['outer' + prop] = function(margins) {
+    cash.fn['outer' + prop] = function(margins) {
       return this[0]['offset' + prop] +
               ( margins
                   ?  _compute(this, 'margin' + ( prop === 'Width'
@@ -551,8 +553,8 @@
   });
   
   function _registerEvent(node, eventName, callback) {
-    const eventCache  = getData(node,'_cashEvents') ||
-                        setData(node, '_cashEvents', {});
+    const eventCache  = cash.getData(node,'_cashEvents') ||
+                        cash.setData(node, '_cashEvents', {});
   
     eventCache[eventName] = eventCache[eventName] || [];
     eventCache[eventName].push(callback);
@@ -560,7 +562,7 @@
   }
   
   function _removeEvent(node, eventName, callback) {
-    const events      = getData(node,'_cashEvents');
+    const events      = cash.getData(node,'_cashEvents');
     let   eventCache  = (events && events[eventName]);
   
     if ( !eventCache ) { return; }
@@ -608,7 +610,7 @@
         callback = function( evt ) {
           let target = evt.target;
   
-          while (!matches(target, delegate)) {
+          while (!cash.matches(target, delegate)) {
             if (target === this) {
               return (target = false);
             }
@@ -653,7 +655,7 @@
       encodeURIComponent(value).replace(/%20/g, '+');
   }
   
-  function _getSelectMultiple_(el) {
+  function _getSelectMultiple(el) {
     const values = [];
     cash.each(el.options, opt => {
       if (opt.selected) {
@@ -663,7 +665,7 @@
     return (values.length ? values : null);
   }
   
-  function _getSelectSingle_(el) {
+  function _getSelectSingle(el) {
     const selectedIndex = el.selectedIndex;
     return (selectedIndex >= 0 ? el.options[selectedIndex].value : null);
   }
@@ -675,9 +677,9 @@
     }
     switch (type.toLowerCase()) {
       case 'select-one':
-        return _getSelectSingle_(el);
+        return _getSelectSingle(el);
       case 'select-multiple':
-        return _getSelectMultiple_(el);
+        return _getSelectMultiple(el);
       case 'radio':
       case 'checkbox':
         return (el.checked ? el.value : null);
@@ -817,12 +819,12 @@
     },
   
     insertBefore(selector) {
-      cash(selector).each((el,idex) => {
-        const parent = el.parentNode;
+      cash(selector).each( (beforeEl, idex) => {
+        const parent = beforeEl.parentNode;
         this.each(el => {
           parent.insertBefore( ( idex === 0
                                   ? el
-                                  : el.cloneNode(true) ), el );
+                                  : el.cloneNode(true) ), beforeEl );
         });
       });
       return this;
@@ -877,13 +879,15 @@
   cash.fn.extend({
   
     children(selector) {
-      const elems = cash.unique( this.map( el => el.children ) );
+      let elems = [];
+      this.each(el => { elems.push.apply(elems, el.children); });
+      elems = cash.unique(elems);
   
       return (
         !selector
           ? elems
           : elems.filter(el => {
-              return matches(el, selector);
+              return cash.matches(el, selector);
             })
       );
     },
@@ -961,7 +965,7 @@
         while ( last && last.parentNode && last !== doc.body.parentNode ) {
           last = last.parentNode;
   
-          if (!selector || (selector && matches(last, selector))) {
+          if (!selector || (selector && cash.matches(last, selector))) {
             result.push(last);
           }
         }
