@@ -70,7 +70,7 @@ cash.fn.extend({
     }
 
     return this.each(el => {
-      const finalCallback = callback;
+      let finalCallback = callback;
       if ( runOnce ) {
         finalCallback = function(){
           callback.apply(this,arguments);
