@@ -348,9 +348,10 @@ QUnit.test( "serialize control elements", function( assert ) {
 });
 
 QUnit.test( "val", function( assert ) {
-  assert.equal($('input[type=text]').val(), "text", "val get Passed!" );
-  $('input[type=text]').val(0);
-  assert.equal($('input[type=text]').val(), 0, "val set Passed!" );
+  var $col  = $('input[type=text]').not('[id]');  // Remove '#qunit-filter-input'
+  assert.equal($col.val(), "text", "val get Passed!" );
+  $col.val(0);
+  assert.equal($col.val(), 0, "val set Passed!" );
 });
 
 //Traversal
