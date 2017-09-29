@@ -991,7 +991,13 @@
   });
   
 
-  /*
+  /**
+   *  Converted to ES6 for Electron from the excellent work by
+   *    shshaw        : https://github.com/shshaw
+   *    Tommie Hansen : https://github.com/tommiehansen
+   *
+   *****************************************************************************
+   *
    * @todo: Convert % to px
    * @todo: Ensure compatibility between Element.animate & requestAnimationFrame
    *        version
@@ -1138,139 +1144,7 @@
   
   ////////////////////////////////////////
   
-  /** Split a string from the number and the unit to allow tweening the number. */
-  const _unitRe = /(-?[0-9]+(?:\.[0-9]+)?)([a-z%]+)?$/i;
-  
-  function _getNumberUnit(val){
-    let ret = _unitRe.exec( val );
-    if ( !ret && ret !== 0 ) {
-      ret = [0,'px'];
-    } else {
-      ret = ret.slice(1,3);
-      ret[0] = parseFloat(ret[0]);
-    }
-  
-    return ret;
-  }
-  
-  
-  /* http://stackoverflow.com/a/10624656/1012919
-  function _percentwidth(elem){
-    const pa  = elem.offsetParent || elem;
-    return ((elem.offsetWidth/pa.offsetWidth)*100).toFixed(2)+'%';
-  }
-  // */
-  
-  
-  ////////////////////////////////////////
-  
-  
-  /** http://stackoverflow.com/a/30583749/1012919 */
-  function _decomposeMatrix(a, b, c, d, e, f) {
-  
-    // caching for readability below
-    const acos    = Math.acos;
-    const atan    = Math.atan;
-    const sqrt    = Math.sqrt;
-    const pi      = Math.PI;
-    const determ  = a * d - b * c;
-  
-    let output = {};
-    let scaleX = 1;
-    let scaleY = 1;
-    let skewX;
-    let skewY;
-    let rotation;
-    let r;
-    let s;
-  
-    // Apply the QR-like decomposition.
-    if (a || b) {
-      r = sqrt(a*a + b*b);
-      rotation = b > 0 ? acos(a / r) : -acos(a / r);
-      scaleX = r;
-      scaleY = determ / r;
-      skewX  = atan((a*c + b*d) / (r*r));
-    } else if (c || d) {
-      s = sqrt(c*c + d*d);
-      rotation = pi * 0.5 - (d > 0 ? acos(-c / s) : -acos(c / s));
-      scaleX = determ / s;
-      scaleY = s;
-      skewY = atan((a*c + b*d) / (s*s));
-    }
-  
-    if ( e && e !== '0' ) { output.translateX = e; }
-    if ( f && e !== '0' ) { output.translateY = f; }
-    if ( scaleX !== 1 ) { output.scaleX = scaleX; }
-    if ( scaleY !== 1 ) { output.scaleY = scaleY; }
-    if ( skewX ) { output.skewX = skewX; }
-    if ( skewY ) { output.skewY = skewY; }
-    if ( rotation !== 0 ) { output.rotate = rotation * (180/pi) + 'deg'; }
-  
-    return output;
-  }
-  
-  const _transformRe  = /([a-z]+)\((.*?)\)/ig;
-  
-  function _getCurrentTransforms(obj) {
-  
-    /** Set translateZ for animationg speed boost. */
-    const transformObj      = {
-      start : { translateZ: 0 },
-      end   : { translateZ: 0 },
-    };
-    const currentTransforms = obj[_transformProp];
-    let   _transform        = _transformRe.exec(currentTransforms);
-    let   tempObj           = {};
-  
-    if ( _transform ) {
-      /** Crap. Did we get a matrix? Guess we gotta parse that. */
-      if ( _transform[1] === 'matrix' ) {
-        tempObj = _decomposeMatrix.apply(null, _transform[2].split(/[\s,]+/) );
-      } else {
-        /** Otherwise, we can just loop through all of those wonderfully easy properties */
-        while ( _transform ){
-          tempObj[_transform[1]] = _transform[2];
-          _transform = _transformRe.exec(currentTransforms);
-        }
-      }
-    }
-  
-    /** Set the start & end properties of the transform equally. The end
-     * properties will be overridden later
-     */
-    for ( let key in tempObj ) {
-      const val = _transforms[key](tempObj[key], true );
-      transformObj.start[ key ] = val;
-      transformObj.end[ key ]   = val;
-    }
-  
-    return transformObj;
-  }
-  
-  
-  ////////////////////////////////////////
-  
-  
-  function _getDeltaValue(delta,start,to) {
-    let end     = to;
-    let suffix  = 0;
-  
-    start = ( start && start.length === 2 ? start[0] : start );
-  
-    if ( to && to.length === 2 ) {
-      end = to[0];
-      suffix = to[1] || 0;
-    }
-  
-    return (start + (end - start) * delta) + suffix;
-  }
-  
-  
-  ////////////////////////////////////////
-  
-  
-  function _buildStyles(obj, end, supportAnimate) {
+  function _buildStyles(obj, end ) {
     const props = {
       // Set start & end as empty objects to be filled
       start: {},
@@ -1280,19 +1154,9 @@
     /** If it's an element, we have to get the current styles */
     const start = win.getComputedStyle(obj);
   
-    let   currentTransforms;
-  
-    if ( supportAnimate ) {
-      // Use the existing transform style for the start.
-      props.start[_transformProp] = start[_transformProp];
-      props.end[_transformProp] = '';
-    } else {
-      /* Get current transform values if element to preserve existing transforms
-       * and to animate smoothly to new transform values.
-       */
-      currentTransforms = _getCurrentTransforms(start);
-      props.transforms = currentTransforms;
-    }
+    // Use the existing transform style for the start.
+    props.start[_transformProp] = start[_transformProp];
+    props.end[_transformProp]   = '';
   
     for (let key in end){
   
@@ -1300,42 +1164,16 @@
   
       if ( _transforms[key] ) {
   
-        /** If using Element.animate, flatten the transforms object to a single
-         *  transform string.
+        /** Since we're using Element.animate, flatten the transforms object to a
+         * single transform string.
          */
-        if ( supportAnimate ) {
-  
-          props.end[_transformProp] += _transforms[key](endValue);
-  
-        } else {
-  
-          currentTransforms.start[key] =
-            _getNumberUnit( currentTransforms.start[key] ||
-                            _transforms[key](null,true) );
-  
-          currentTransforms.end[key]   = _getNumberUnit(endValue);
-  
-        }
+        props.end[_transformProp] += _transforms[key](endValue);
   
       } else {
   
         /** Convert to vendor prefixed, camelCase property name */
         const propName    = cash.prefixedProp(key);
         let   startValue  = start[propName];
-  
-        /** If not using Element.animate, split the values into an array
-         *  containing the number and the unit, e.g. [100,'px']
-         */
-  
-        if ( !supportAnimate ) {
-          startValue = _getNumberUnit(startValue);
-          endValue   = _getNumberUnit(endValue);
-  /*
-          if ( start[1] !== end[1] ) {
-            console.log('conversion needed!',start,end);
-          }
-  */
-        }
   
         props.start[propName] = startValue;
         props.end[propName]   = endValue;
@@ -1347,9 +1185,7 @@
     return props;
   }
   
-  
   ////////////////////////////////////////
-  
   
   const _defaultOpts  = {
     iterations    : 1,
@@ -1378,7 +1214,7 @@
     frameComplete : cash.noop, // a keyframe has been completed
   };
   
-  function _useElementAnimate( opts ) {
+  function _renderViaElementAnimate( opts ) {
     const frameOpts   = opts.frameOpts;
     const stagger     = frameOpts.stagger *  opts.idex;
     const direction   = frameOpts.direction;
@@ -1414,83 +1250,6 @@
     return render;
   }
   
-  function _manualAnimation( opts ) {
-    const frameOpts       = opts.frameOpts;
-    const stagger         = frameOpts.stagger *  opts.idex;
-    const direction       = frameOpts.direction;
-    const easing          = _bezier( frameOpts.easing ) || _easings.linear;
-    const transformValues = opts.props.transforms;
-    const isElement       = opts.obj.nodeType;
-    let   now             = Date.now();
-    let   startTime       = now + opts.delay + stagger;
-    let   reversed        = ( direction === 'reverse' ||
-                              direction === 'alternate-reverse' );
-    let   iterations      = frameOpts.iterations;
-    let   progress        = 0;
-  
-    function __render() {
-      now = Date.now();
-  
-      /** Don't run the animation until after the start time in case a
-       *  delay was set
-       */
-      if ( now < startTime ) { return; }
-  
-      progress = ( now - startTime ) / opts.duration;
-      if ( progress > 1 ) { progress = 1; }
-  
-      const delta = easing( reversed ? 1 - progress : progress );
-  
-      /** Animate all normal properties or styles */
-      for (let key in opts.endValues){
-        opts.target[key] =
-          _getDeltaValue(delta, opts.startValues[key], opts.endValues[key]);
-      }
-  
-      /** Animate all transforms, grouped together. */
-      if ( isElement && transformValues ) {
-        let transform = '';
-  
-        for (let key in transformValues.end) {
-          transform +=
-            _transforms[key]( _getDeltaValue( delta,
-                                              transformValues.start[key],
-                                              transformValues.end[key] ) );
-        }
-        opts.target[_transformProp] = transform;
-      }
-  
-      if ( frameOpts.itemProgress.call( opts.obj, opts.obj,  opts.idex)
-                                                            === false ) {
-        return false;
-      }
-  
-      if ( progress >= 1 ) {
-        if ( direction === 'alternate' ||
-             direction === 'alternate-reverse' ) {
-          reversed = !reversed;
-        }
-  
-        if ( iterations <= 1 ) {
-          opts.onFinished( opts.obj,  opts.idex);
-          return false;
-        } else {
-          if ( iterations > 1 && iterations !== Infinity ) {
-            iterations--;
-          }
-          startTime = now;
-        }
-      }
-  
-    }
-  
-    _animations.push( __render );
-    _animations.play();
-  
-    return __render;
-  }
-  
-  
   function Animator( objects, keyframes, opts ) {
   
     objects   = objects.length   ? objects   : [objects];
@@ -1500,24 +1259,15 @@
     const totalFrames         = keyframes.length;
     let   animationsRemaining = objects.length;
     let   currentFrame        = 0;
-    const __finished          = function( obj,  idex ) {
   
-      opts.itemComplete.call( obj, obj, idex );
+    opts.start.call( objects, objects );
   
-      animationsRemaining--;
-      if ( !animationsRemaining ) {
-        opts.frameComplete.call( objects, objects );
+    __runKeyframe( keyframes[currentFrame] );
   
-        currentFrame++;
-        if ( currentFrame < totalFrames ) {
-          animationsRemaining = objects.length;
-          __runKeyframe( keyframes[currentFrame] );
-        } else {
-          opts.complete.call( objects, objects );
-        }
-      }
-    };
-  
+    /**********************************************************************
+     * Context bound animation helpers {
+     *
+     */
     function __runKeyframe( keyframe ) {
   
       let frameOpts = opts;
@@ -1531,8 +1281,6 @@
       cash.each(objects, function(obj, idex) {
   
         const isElement       = obj.nodeType;
-        const supportAnimate  = (isElement && (!frameOpts.disableAnimate &&
-                                                obj.animate));
   
         /** Object to apply the animation to. If element, use the style,
          *  otherwise apply it to the target itself.
@@ -1546,7 +1294,7 @@
   
         if ( isElement ) {
   
-          props       = _buildStyles(obj, keyframe, supportAnimate);
+          props       = _buildStyles(obj, keyframe);
           startValues = props.start;
           endValues   = props.end;
   
@@ -1562,42 +1310,38 @@
   
         frameOpts.itemStart.call(obj,obj, idex);
   
-        // Use element.animate if supported
-        let render;
-        if ( supportAnimate ) {
-          render = _useElementAnimate( {
-            target      : target,
-            obj         : obj,
-            idex        : idex,
-            frameOpts   :  frameOpts,
-            startValues : startValues,
-            endValues   : endValues,
-            onFinished  : __finished,
-          });
-  
-  
-  
-        } else {
-          render = _manualAnimation( {
-            target      : target,
-            obj         : obj,
-            idex        : idex,
-            frameOpts   :  frameOpts,
-            props       : props,
-            startValues : startValues,
-            endValues   : endValues,
-            onFinished  : __finished,
-          });
-  
-        }
-  
-        return render;
+        // Use element.animate
+        return _renderViaElementAnimate( {
+          target      : target,
+          obj         : obj,
+          idex        : idex,
+          frameOpts   :  frameOpts,
+          startValues : startValues,
+          endValues   : endValues,
+          onFinished  : __finished,
+        });
       });
     }
   
-    opts.start.call( objects, objects );
+    function __finished( obj,  idex ) {
   
-    __runKeyframe( keyframes[currentFrame] );
+      opts.itemComplete.call( obj, obj, idex );
+  
+      animationsRemaining--;
+      if ( !animationsRemaining ) {
+        opts.frameComplete.call( objects, objects );
+  
+        currentFrame++;
+        if ( currentFrame < totalFrames ) {
+          animationsRemaining = objects.length;
+          __runKeyframe( keyframes[currentFrame] );
+        } else {
+          opts.complete.call( objects, objects );
+        }
+      }
+    }
+    /* Context bound animation helpers }
+     **********************************************************************/
   }
   
   cash.animate = function( obj, end, opts ) {
