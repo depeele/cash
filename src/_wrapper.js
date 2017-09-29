@@ -29,5 +29,7 @@
   // @include ./offset.js
   // @include ./traversal.js
 
+  // @include ./animate.js
+
   return cash;
 });
