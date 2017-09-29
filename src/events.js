@@ -52,7 +52,7 @@ cash.fn.extend({
     }
 
     if ( delegate ) {
-      let originalCallback  = callback;
+      const originalCallback  = callback;
       callback = function( evt ) {
         let target = evt.target;
 
@@ -70,7 +70,7 @@ cash.fn.extend({
     }
 
     return this.each(el => {
-      let finalCallback = callback;
+      const finalCallback = callback;
       if ( runOnce ) {
         finalCallback = function(){
           callback.apply(this,arguments);
