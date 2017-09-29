@@ -1,53 +1,51 @@
-function encode(name,value) {
+function _encode(name,value) {
   return '&' + encodeURIComponent(name) + '=' +
     encodeURIComponent(value).replace(/%20/g, '+');
 }
 
-function getSelectMultiple_(el) {
-  var values = [];
-  each(el.options, o => {
-    if (o.selected) {
-      values.push(o.value);
+function _getSelectMultiple_(el) {
+  const values = [];
+  cash.each(el.options, opt => {
+    if (opt.selected) {
+      values.push(opt.value);
     }
   });
-  return values.length ? values : null;
+  return (values.length ? values : null);
 }
 
-function getSelectSingle_(el) {
-  var selectedIndex = el.selectedIndex;
-  return selectedIndex >= 0 ? el.options[selectedIndex].value :
-    null;
+function _getSelectSingle_(el) {
+  const selectedIndex = el.selectedIndex;
+  return (selectedIndex >= 0 ? el.options[selectedIndex].value : null);
 }
 
-function getValue(el) {
-  var type = el.type;
+function _getValue(el) {
+  const type = el.type;
   if (!type) {
     return null;
   }
   switch (type.toLowerCase()) {
     case 'select-one':
-      return getSelectSingle_(el);
+      return _getSelectSingle_(el);
     case 'select-multiple':
-      return getSelectMultiple_(el);
+      return _getSelectMultiple_(el);
     case 'radio':
-      return (el.checked) ? el.value : null;
     case 'checkbox':
-      return (el.checked) ? el.value : null;
+      return (el.checked ? el.value : null);
     default:
-      return el.value ? el.value : null;
+      return (el.value   ? el.value : null);
   }
 }
 
-fn.extend({
+cash.fn.extend({
 
   serialize() {
-    var query = '';
+    let query = '';
 
-    each(this[0].elements || this, el => {
+    cash.each(this[0].elements || this, el => {
       if (el.disabled || el.tagName === 'FIELDSET') {
         return;
       }
-      var name = el.name;
+      const name = el.name;
       switch (el.type.toLowerCase()) {
         case 'file':
         case 'reset':
@@ -55,17 +53,17 @@ fn.extend({
         case 'button':
           break;
         case 'select-multiple':
-          var values = getValue(el);
+          const values = _getValue(el);
           if (values !== null) {
-            each(values, value => {
-              query += encode(name, value);
+            cash.each(values, value => {
+              query += _encode(name, value);
             });
           }
           break;
         default:
-          var value = getValue(el);
+          const value = _getValue(el);
           if (value !== null) {
-            query += encode(name, value);
+            query += _encode(name, value);
           }
       }
     });
@@ -75,9 +73,9 @@ fn.extend({
 
   val(value) {
     if (value === undefined) {
-      return getValue(this[0]);
+      return _getValue(this[0]);
     } else {
-      return this.each(v => v.value = value);
+      return this.each(el => el.value = value);
     }
   }
 

@@ -1,11 +1,12 @@
-fn.extend({
+/* jshint laxbreak: true */
+cash.fn.extend({
 
   add(selector, context) {
-    return unique(cash.merge(this, cash(selector, context)));
+    return cash.unique(cash.merge(this, cash(selector, context)));
   },
 
   each(callback) {
-    each(this, callback);
+    cash.each(this, callback);
     return this;
   },
 
@@ -16,9 +17,11 @@ fn.extend({
   filter(selector) {
     if ( !selector ) { return this; }
 
-    var comparator = ( isFunction(selector) ? selector : getCompareFunction(selector ));
+    const comparator = ( cash.isFunction(selector)
+                          ? selector
+                          : cash.selectComparator(selector ) );
 
-    return cash( filter.call(this, e => comparator(e, selector) ) );
+    return cash( filter.call(this, el => comparator(el, selector) ) );
   },
 
   first() {
@@ -31,8 +34,8 @@ fn.extend({
   },
 
   index(elem) {
-    var child = elem ? cash(elem)[0] : this[0],
-        collection = elem ? this : cash(child).parent().children();
+    const child       = elem ? cash(elem)[0] : this[0];
+    const collection  = elem ? this : cash(child).parent().children();
     return slice.call( collection ).indexOf(child);
   },
 

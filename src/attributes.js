@@ -1,128 +1,137 @@
-var notWhiteMatch = /\S+/g;
+/* jshint laxbreak: true */
+const _notWhiteRe = /\S+/g;
 
-function getClasses(c){
-  return isString(c) && c.match(notWhiteMatch);
+function _getClasses( cls ){
+  return cash.isString(cls) && cls.match(_notWhiteRe);
 }
 
-function hasClass(v,c) {
-  return ( v.classList ?
-    v.classList.contains(c) :
-    new RegExp('(^| )' + c + '( |$)', 'gi').test(v.className)
+function _hasClass( el, cls ) {
+  return ( el.classList ?
+    el.classList.contains(cls) :
+    new RegExp('(^| )' + cls + '( |$)', 'gi').test(el.className)
   );
 }
 
-function addClass(v,c,spacedName){
-  if (v.classList) { v.classList.add(c); }
-  else if ( spacedName.indexOf(` ${c} `) ) { v.className += ' ' + c; }
+function _addClass( el, cls, spacedName ){
+  if (el.classList) { el.classList.add(cls); }
+  else if ( spacedName.indexOf(` ${cls} `) ) { el.className += ' ' + cls; }
 }
 
-function removeClass(v,c){
-  if (v.classList) { v.classList.remove(c); }
-  else { v.className = v.className.replace(c,''); }
+function _removeClass( el, cls ){
+  if (el.classList) { el.classList.remove(cls); }
+  else { el.className = el.className.replace(cls,''); }
 }
 
-fn.extend({
+cash.fn.extend({
 
-  addClass(c){
-    var classes = getClasses(c);
+  addClass( cls ){
+    const classes = _getClasses(cls);
 
-    return ( classes ?
-      this.each(v => {
-        var spacedName = ` ${v.className} `;
-        each(classes,c => { addClass(v,c,spacedName); });
-      }) :
-      this
+    return (
+      classes
+        ? this.each(el => {
+            const spacedName = ` ${el.className} `;
+            cash.each( (classes,cls) => { _addClass(el,cls,spacedName); });
+          })
+        : this
     );
   },
 
-  attr(name, value) {
+  attr( name, value ) {
     if ( !name ) { return undefined; }
 
-    if ( isString(name) ) {
+    if ( cash.isString(name) ) {
       if ( value === undefined ) {
         return this[0] ?
           this[0].getAttribute ? this[0].getAttribute(name) : this[0][name]
           : undefined;
       }
 
-      return this.each(v => {
-        if ( v.setAttribute ) { v.setAttribute(name, value); }
-        else { v[name] = value; }
+      return this.each(el => {
+        if ( el.setAttribute ) { el.setAttribute(name, value); }
+        else { el[name] = value; }
       });
     }
 
-    for (var key in name) {
+    for (let key in name) {
       this.attr(key,name[key]);
     }
 
     return this;
   },
 
-  hasClass(c) {
-    var check = false,
-        classes = getClasses(c);
+  hasClass( cls ) {
+    const classes = _getClasses(cls);
+    let   check   = false;
+
     if ( classes && classes.length ) {
-      this.each(v => {
-        check = hasClass(v,classes[0]);
+      this.each(el => {
+        check = _hasClass(el,classes[0]);
         return !check;
       });
     }
     return check;
   },
 
-  prop(name,value) {
+  prop( name, value ) {
 
-    if ( isString(name) ) {
+    if ( cash.isString(name) ) {
       return ( value === undefined ?
         this[0][name] :
-        this.each(v => { v[name] = value; })
+        this.each(el => { el[name] = value; })
       );
     }
 
-    for (var key in name) {
+    for (let key in name) {
       this.prop(key,name[key]);
     }
 
     return this;
   },
 
-  removeAttr(name) {
-    return this.each(v => {
-      if ( v.removeAttribute ) { v.removeAttribute(name); }
-      else { delete v[name]; }
+  removeAttr( name ) {
+    return this.each(el => {
+      if ( el.removeAttribute ) { el.removeAttribute(name); }
+      else { delete el[name]; }
     });
   },
 
-  removeClass(c){
+  removeClass( cls ) {
     if(!arguments.length){
       return this.attr('class','');
     }
-    var classes = getClasses(c);
-    return ( classes ?
-      this.each(v => {
-        each(classes,c => { removeClass(v,c); });
-      }) :
-      this
+    const classes = _getClasses(cls);
+    return (
+      classes
+        ? this.each(el => {
+            cash.each(classes,cls => { _removeClass(el,cls); });
+          })
+        : this
     );
   },
 
-  removeProp(name){
-    return this.each(v => { delete v[name]; });
+  removeProp( name ) {
+    return this.each(el => { delete el[name]; });
   },
 
-  toggleClass(c, state){
+  toggleClass( cls, state ) {
     if ( state !== undefined ) {
-      return this[ state ? 'addClass' : 'removeClass' ](c);
+      return this[ state ? 'addClass' : 'removeClass' ](cls);
     }
-    var classes = getClasses(c);
-    return ( classes ?
-      this.each(v => {
-        var spacedName = ` ${v.className} `;
-        each(classes,c => {
-          if ( hasClass(v,c) ) { removeClass(v,c); } else { addClass(v,c,spacedName); }
-        });
-      }) :
-      this
+    const classes = _getClasses(cls);
+    return (
+      classes
+        ? this.each(el => {
+            const spacedName  = ` ${el.className} `;
+            cash.each(classes,cls => {
+              if ( _hasClass(el,cls) ) {
+                _removeClass(el,cls);
+              } else {
+                _addClass(el,cls,spacedName);
+              }
+            });
+          })
+        : this
     );
   },
 

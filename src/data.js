@@ -1,48 +1,51 @@
-var uid = cash.uid = '_cash'+Date.now();
+/* jshint laxbreak: true */
+const uid = cash.uid = '_cash'+Date.now();
 
-function getDataCache(node) {
+function _getDataCache(node) {
   return (node[uid] = node[uid] || {});
 }
 
-function setData(node, key, value) {
-  return (getDataCache(node)[key] = value);
+function _setData(node, key, value) {
+  return (_getDataCache(node)[key] = value);
 }
 
-function getData(node, key) {
-  var c = getDataCache(node);
-  if ( c[key] === undefined ) {
-    c[key] = node.dataset ? node.dataset[key] : cash(node).attr('data-'+key);
+function _getData(node, key) {
+  const cache = _getDataCache(node);
+  if ( cache[key] === undefined ) {
+    cache[key] = (node.dataset
+                    ? node.dataset[key]
+                    : cash(node).attr('data-'+key));
   }
-  return c[key];
+  return cache[key];
 }
 
-function removeData(node, key) {
-  var c = getDataCache(node);
-  if ( c ) { delete c[key]; }
+function _removeData(node, key) {
+  const cache = _getDataCache(node);
+  if ( cache )             { delete cache[key]; }
   else if ( node.dataset ) { delete node.dataset[key]; }
-  else { cash(node).removeAttr('data-' + name); }
+  else                     { cash(node).removeAttr('data-' + name); }
 }
 
-fn.extend({
+cash.fn.extend({
 
   data(name, value) {
 
-    if ( isString(name) ) {
-      return ( value === undefined ?
-          getData(this[0],name) :
-          this.each(v => setData(v,name,value) )
-        );
+    if ( cash.isString(name) ) {
+      return ( value === undefined
+                ?  _getData(this[0],name)
+                : this.each(el => _setData(el,name,value) )
+      );
     }
 
-    for (var key in name) {
-      this.data(key,name[key]);
+    for (let key in name) {
+      this.data( key, name[key] );
     }
 
     return this;
   },
 
   removeData(key) {
-    return this.each(v => removeData(v,key) );
+    return this.each(el => _removeData(el,key) );
   }
 
 });

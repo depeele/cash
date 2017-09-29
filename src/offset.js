@@ -1,20 +1,20 @@
-var docEl = doc.documentElement;
+const docEl = doc.documentElement;
 
-fn.extend({
+cash.fn.extend({
 
   position(){
-    var el = this[0];
+    const el = this[0];
     return {
       left: el.offsetLeft,
-      top: el.offsetTop
+      top : el.offsetTop,
     };
   },
 
   offset(){
-    var rect = this[0].getBoundingClientRect();
+    const rect = this[0].getBoundingClientRect();
     return {
-      top: rect.top + win.pageYOffset - docEl.clientTop,
-      left: rect.left + win.pageXOffset - docEl.clientLeft
+      top : rect.top  + win.pageYOffset - docEl.clientTop,
+      left: rect.left + win.pageXOffset - docEl.clientLeft,
     };
   },
 

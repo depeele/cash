@@ -1,30 +1,34 @@
-var camelCase = (function(){
-  var camelRegex = /(?:^\w|[A-Z]|\b\w)/g,
-      whiteSpace = /[\s-_]+/g;
+/* jshint laxbreak: true */
+const _camelCase  = (function(){
+  const _camelRe  = /(?:^\w|[A-Z]|\b\w)/g;
+  const _wsRe     = /[\s-_]+/g;
+
   return function(str) {
-    return str.replace(camelRegex, function(letter, index) {
-      return letter[ index === 0 ? 'toLowerCase' : 'toUpperCase' ]();
-    }).replace(whiteSpace, '');
+    return str.replace(_camelRe, (letter, index) => letter[index === 0
+                                                            ? 'toLowerCase'
+                                                            : 'toUpperCase']())
+              .replace(_wsRe, '');
   };
 }());
 
-var getPrefixedProp = (function() {
-  var cache = {},
-      doc = document,
-      div = doc.createElement('div'),
-      style = div.style;
+const _getPrefixedProp  = (function() {
+  const cache     = {};
+  const doc       = document;
+  const div       = doc.createElement('div');
+  const style     = div.style;
+  const prefixes  = ['webkit', 'moz', 'ms', 'o'];
 
   return function(prop) {
-    prop = camelCase(prop);
+    prop = _camelCase(prop);
     if ( cache[prop] ) { return cache[prop]; }
 
-    var ucProp = prop.charAt(0).toUpperCase() + prop.slice(1),
-        prefixes = ['webkit', 'moz', 'ms', 'o'],
-        props = (prop + ' ' + (prefixes).join(ucProp + ' ') + ucProp).split(' ');
+    const ucProp  = prop.charAt(0).toUpperCase() + prop.slice(1);
+    const props   = (prop + ' ' + (prefixes).join(ucProp + ' ') + ucProp)
+                      .split(' ');
 
-    each(props, p => {
-      if ( p in style ) {
-        cache[p] = prop = cache[prop] = p;
+    cash.each(props, prop => {
+      if ( prop in style ) {
+        cache[prop] = prop = cache[prop] = prop;
         return false;
       }
     });
@@ -33,21 +37,21 @@ var getPrefixedProp = (function() {
   };
 }());
 
-cash.prefixedProp = getPrefixedProp;
-cash.camelCase = camelCase;
+cash.prefixedProp = _getPrefixedProp;
+cash.camelCase    = _camelCase;
 
-fn.extend({
+cash.fn.extend({
 
   css(prop,value){
-    if ( isString(prop) ) {
-      prop = getPrefixedProp(prop);
+    if ( cash.isString(prop) ) {
+      prop = _getPrefixedProp(prop);
       return ( arguments.length > 1 ?
-        this.each(v => v.style[prop] = value ) :
+        this.each(el => el.style[prop] = value ) :
         win.getComputedStyle(this[0])[prop]
       );
     }
 
-    for (var key in prop) {
+    for (let key in prop) {
       this.css(key,prop[key]);
     }
 

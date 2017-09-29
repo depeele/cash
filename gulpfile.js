@@ -1,8 +1,9 @@
 'use strict';
 
-var gulp = require('gulp');
-var pkg = require('./package.json');
-var $ = require('gulp-load-plugins')();
+const gulp   = require('gulp');
+const pkg    = require('./package.json');
+const $      = require('gulp-load-plugins')();
+const uglify = require('gulp-uglify-es').default;
 
 gulp.task('build', function () {
   return gulp.src('./src/_wrapper.js')
@@ -12,7 +13,6 @@ gulp.task('build', function () {
       }
     }))
     .pipe($.rename('cash.js'))
-    .pipe($['6to5']())
     .pipe($.size())
     .pipe($.size({ gzip: true }))
     .pipe(gulp.dest('./dist/'));
@@ -20,9 +20,10 @@ gulp.task('build', function () {
 
 gulp.task('minify', ['build'], function() {
   return gulp.src(['./dist/cash.js'])
-    .pipe($.uglify({
-      preserveComments: 'license'
-    }))
+    .pipe(uglify({output:{comments: 'saveLicense'}}))
+    .on('error', (err) => {
+      $.util.log($.util.colors.red('[Error]'), err.toString());
+    })
     .pipe($.size())
     .pipe($.size({ gzip: true }))
     .pipe($.rename('cash.min.js'))

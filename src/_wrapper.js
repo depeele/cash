@@ -9,12 +9,12 @@
   }
 })(this, function() {
 
-  var doc        = document,
-      win        = window,
-      ArrayProto = Array.prototype,
-      slice      = ArrayProto.slice,
-      filter     = ArrayProto.filter,
-      push       = ArrayProto.push;
+  const doc        = document;
+  const win        = window;
+  const ArrayProto = Array.prototype;
+  const slice      = ArrayProto.slice;
+  const filter     = ArrayProto.filter;
+  const push       = ArrayProto.push;
 
   // @include ./core.js
   // @include ./util.js

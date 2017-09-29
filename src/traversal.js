@@ -1,15 +1,15 @@
-fn.extend({
+/* jshint laxbreak: true */
+cash.fn.extend({
 
   children(selector) {
-    var elems = [];
-    this.each(el => { push.apply(elems,el.children); });
-    elems = unique(elems);
+    const elems = cash.unique( this.map( el => el.children ) );
 
     return (
-      !selector ? elems :
-      elems.filter(v => {
-        return matches(v, selector);
-      })
+      !selector
+        ? elems
+        : elems.filter(el => {
+            return matches(el, selector);
+          })
     );
   },
 
@@ -22,11 +22,11 @@ fn.extend({
   is(selector) {
     if ( !selector ) { return false; }
 
-    var match = false,
-        comparator = getCompareFunction(selector);
+    const comparator  = cash.selectComparator(selector);
+    let   match       = false;
 
     this.each(el => {
-      match = comparator(el,selector);
+      match = comparator( el,selector );
       return !match;
     });
 
@@ -38,17 +38,17 @@ fn.extend({
       return cash( selector && this.has(selector).length ? selector : null );
     }
 
-    var elems = [];
-    this.each(el => { push.apply(elems, find(selector,el) ); });
+    const elems = this.map(el => cash.find(selector, el) );
 
-    return unique(elems);
+    return cash.unique(elems);
   },
 
   has(selector) {
 
-    var comparator = (
-      isString(selector) ? el => { return find(selector,el).length !== 0; } :
-      el => { return el.contains(selector); }
+    const comparator = (
+      cash.isString(selector)
+        ? el => { return cash.find(selector,el).length !== 0; }
+        : el => { return el.contains(selector); }
     );
 
     return this.filter(comparator);
@@ -61,26 +61,24 @@ fn.extend({
   not(selector) {
     if ( !selector ) { return this; }
 
-    var comparator = getCompareFunction(selector);
+    const comparator = cash.selectComparator(selector);
 
-    return this.filter(el => {
-      return !comparator(el, selector);
-    });
+    return this.filter(el => !comparator(el, selector));
   },
 
   parent() {
-    var result = [];
+    const result = [];
 
     this.each(item => {
       if (item && item.parentNode) { result.push(item.parentNode); }
     });
 
-    return unique(result);
+    return cash.unique(result);
   },
 
   parents(selector) {
-    var last,
-        result = [];
+    const result = [];
+    let   last;
 
     this.each(item => {
       last = item;
@@ -94,7 +92,7 @@ fn.extend({
       }
     });
 
-    return unique(result);
+    return cash.unique(result);
   },
 
   prev() {
@@ -102,10 +100,10 @@ fn.extend({
   },
 
   siblings() {
-    var collection = this.parent().children(),
-        el = this[0];
+    const collection  = this.parent().children();
+    const thisEl      = this[0];
 
-    return collection.filter(i => i !== el);
+    return collection.filter(el => el !== thisEl);
   }
 
 });

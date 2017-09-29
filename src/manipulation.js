@@ -1,27 +1,37 @@
-function insertElement(el, child, prepend){
+/* jshint laxbreak: true */
+function _insertElement(el, child, prepend){
   if ( prepend ) {
-    var first = el.childNodes[0];
-    el.insertBefore(child,first);
+    const first = el.childNodes[0];
+    el.insertBefore( child, first );
+
   } else {
     el.appendChild(child);
   }
 }
 
-function insertContent(parent, child, prepend){
-  var str = isString(child);
+function _insertContent(parent, child, prepend){
+  const str = cash.isString(child);
 
   if ( !str && child.length ) {
-    each(child, v => insertContent(parent, v, prepend) );
+    cash.each(child, el => _insertContent(parent, el, prepend) );
     return;
   }
 
-  each(parent,
-    str ? v => v.insertAdjacentHTML( prepend ? 'afterbegin' : 'beforeend', child) :
-    (v,i) => insertElement(v,( i === 0 ? child : child.cloneNode(true) ), prepend)
+  cash.each(parent,
+    (str
+      ? el        => el.insertAdjacentHTML( (prepend
+                                              ? 'afterbegin'
+                                              : 'beforeend'), child)
+      : (el,idex) => _insertElement( el,
+                                     ( (idex === 0
+                                              ? child
+                                              : child.cloneNode(true) ) ),
+                                     prepend )
+    )
   );
 }
 
-fn.extend({
+cash.fn.extend({
 
   after(selector) {
     cash(selector).insertAfter(this);
@@ -29,12 +39,12 @@ fn.extend({
   },
 
   append(content) {
-    insertContent(this,content);
+    _insertContent(this,content);
     return this;
   },
 
   appendTo(parent) {
-    insertContent(cash(parent),this);
+    _insertContent(cash(parent),this);
     return this;
   },
 
@@ -44,7 +54,7 @@ fn.extend({
   },
 
   clone() {
-    return cash(this.map(v => { return v.cloneNode(true); }));
+    return cash(this.map(el => { return el.cloneNode(true); }));
   },
 
   empty() {
@@ -54,46 +64,54 @@ fn.extend({
 
   html(content) {
     if ( content === undefined ) { return this[0].innerHTML; }
-    var source = ( content.nodeType ? content[0].outerHTML : content );
-    return this.each(v => v.innerHTML = source);
+    const source = ( content.nodeType ? content[0].outerHTML : content );
+    return this.each(el => el.innerHTML = source);
   },
 
   insertAfter(selector) {
 
-    cash(selector).each((el,i) => {
-      var parent = el.parentNode,
-          sibling = el.nextSibling;
-      this.each(v => { parent.insertBefore(( i === 0 ? v : v.cloneNode(true) ),sibling); });
+    cash(selector).each( (el, idex) => {
+      const parent = el.parentNode;
+      const sibling = el.nextSibling;
+      this.each(el => {
+        parent.insertBefore( ( idex === 0
+                                ? el
+                                : el.cloneNode(true) ), sibling );
+      });
     });
 
     return this;
   },
 
   insertBefore(selector) {
-    cash(selector).each((el,i) => {
-      var parent = el.parentNode;
-      this.each(v => { parent.insertBefore(( i === 0 ? v : v.cloneNode(true) ),el); });
+    cash(selector).each((el,idex) => {
+      const parent = el.parentNode;
+      this.each(el => {
+        parent.insertBefore( ( idex === 0
+                                ? el
+                                : el.cloneNode(true) ), el );
+      });
     });
     return this;
   },
 
   prepend(content) {
-    insertContent(this,content,true);
+    _insertContent(this,content,true);
     return this;
   },
 
   prependTo(parent) {
-    insertContent(cash(parent),this,true);
+    _insertContent(cash(parent),this,true);
     return this;
   },
 
   remove() {
-    return this.each(v => v.parentNode.removeChild(v));
+    return this.each(el => el.parentNode.removeChild(el));
   },
 
   text(content) {
     if ( content === undefined ) { return this[0].textContent; }
-    return this.each(v => v.textContent = content);
+    return this.each(el => el.textContent = content);
   }
 
 });
