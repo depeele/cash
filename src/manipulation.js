@@ -71,7 +71,7 @@ cash.fn.extend({
   insertAfter(selector) {
 
     cash(selector).each( (el, idex) => {
-      const parent = el.parentNode;
+      const parent  = el.parentNode;
       const sibling = el.nextSibling;
       this.each(el => {
         parent.insertBefore( ( idex === 0
