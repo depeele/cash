@@ -26,7 +26,8 @@
     "gulp-size": "^2.1.0",
     "gulp-uglify-es": "^0.1.3",
     "gulp-util": "^3.0.8",
-    "jshint": "^2.9.5"
-  },
-  "dependencies": {}
+    "gulp-qunit": "^1.5.0",
+    "jshint": "^2.9.5",
+    "qunitjs": "^2.4.0"
+  }
 }
