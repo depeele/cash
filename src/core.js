@@ -11,14 +11,14 @@ const _classRe    = /^\.[\w-]*$/;
 const _htmlRe     =  /<.+>/;
 const _singletRe  = /^\w+$/;
 
-function _find(selector,context) {
+function _find( selector, context ) {
   context = context || doc;
   const elems = (
-        _classRe.test(selector) ?
-          context.getElementsByClassName(selector.slice(1)) :
-          _singletRe.test(selector) ?
-            context.getElementsByTagName(selector) :
-            context.querySelectorAll(selector)
+        _classRe.test(selector)
+          ?  context.getElementsByClassName( selector.slice(1) )
+          : (_singletRe.test(selector)
+              ? context.getElementsByTagName(selector)
+              : context.querySelectorAll(selector))
       );
   return elems;
 }
