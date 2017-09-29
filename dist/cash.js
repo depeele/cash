@@ -606,7 +606,7 @@
       }
   
       if ( delegate ) {
-        let originalCallback  = callback;
+        const originalCallback  = callback;
         callback = function( evt ) {
           let target = evt.target;
   
@@ -806,7 +806,7 @@
     insertAfter(selector) {
   
       cash(selector).each( (el, idex) => {
-        const parent = el.parentNode;
+        const parent  = el.parentNode;
         const sibling = el.nextSibling;
         this.each(el => {
           parent.insertBefore( ( idex === 0
