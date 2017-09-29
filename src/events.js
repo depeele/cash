@@ -1,6 +1,6 @@
 function _registerEvent(node, eventName, callback) {
-  const eventCache  = getData(node,'_cashEvents') ||
-                      setData(node, '_cashEvents', {});
+  const eventCache  = cash.getData(node,'_cashEvents') ||
+                      cash.setData(node, '_cashEvents', {});
 
   eventCache[eventName] = eventCache[eventName] || [];
   eventCache[eventName].push(callback);
@@ -8,7 +8,7 @@ function _registerEvent(node, eventName, callback) {
 }
 
 function _removeEvent(node, eventName, callback) {
-  const events      = getData(node,'_cashEvents');
+  const events      = cash.getData(node,'_cashEvents');
   let   eventCache  = (events && events[eventName]);
 
   if ( !eventCache ) { return; }
@@ -56,7 +56,7 @@ cash.fn.extend({
       callback = function( evt ) {
         let target = evt.target;
 
-        while (!matches(target, delegate)) {
+        while (!cash.matches(target, delegate)) {
           if (target === this) {
             return (target = false);
           }

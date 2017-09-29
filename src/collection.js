@@ -34,8 +34,8 @@ cash.fn.extend({
   },
 
   index(elem) {
-    const child       = elem ? cash(elem)[0] : this[0];
-    const collection  = elem ? this : cash(child).parent().children();
+    const child       = (elem ? cash(elem)[0] : this[0]);
+    const collection  = (elem ? this : cash(child).parent().children());
     return slice.call( collection ).indexOf(child);
   },
 

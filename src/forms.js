@@ -3,7 +3,7 @@ function _encode(name,value) {
     encodeURIComponent(value).replace(/%20/g, '+');
 }
 
-function _getSelectMultiple_(el) {
+function _getSelectMultiple(el) {
   const values = [];
   cash.each(el.options, opt => {
     if (opt.selected) {
@@ -13,7 +13,7 @@ function _getSelectMultiple_(el) {
   return (values.length ? values : null);
 }
 
-function _getSelectSingle_(el) {
+function _getSelectSingle(el) {
   const selectedIndex = el.selectedIndex;
   return (selectedIndex >= 0 ? el.options[selectedIndex].value : null);
 }
@@ -25,9 +25,9 @@ function _getValue(el) {
   }
   switch (type.toLowerCase()) {
     case 'select-one':
-      return _getSelectSingle_(el);
+      return _getSelectSingle(el);
     case 'select-multiple':
-      return _getSelectMultiple_(el);
+      return _getSelectMultiple(el);
     case 'radio':
     case 'checkbox':
       return (el.checked ? el.value : null);

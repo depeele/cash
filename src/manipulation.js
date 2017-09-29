@@ -84,12 +84,12 @@ cash.fn.extend({
   },
 
   insertBefore(selector) {
-    cash(selector).each((el,idex) => {
-      const parent = el.parentNode;
+    cash(selector).each( (beforeEl, idex) => {
+      const parent = beforeEl.parentNode;
       this.each(el => {
         parent.insertBefore( ( idex === 0
                                 ? el
-                                : el.cloneNode(true) ), el );
+                                : el.cloneNode(true) ), beforeEl );
       });
     });
     return this;

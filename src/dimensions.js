@@ -7,11 +7,11 @@ cash.each(['Width','Height'], prop => {
 
   const lower = prop.toLowerCase();
 
-  fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
+  cash.fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
 
-  fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
+  cash.fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
 
-  fn['outer' + prop] = function(margins) {
+  cash.fn['outer' + prop] = function(margins) {
     return this[0]['offset' + prop] +
             ( margins
                 ?  _compute(this, 'margin' + ( prop === 'Width'

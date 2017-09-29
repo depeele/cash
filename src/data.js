@@ -46,6 +46,8 @@ cash.fn.extend({
 
   removeData(key) {
     return this.each(el => _removeData(el,key) );
-  }
-
+  },
 });
+
+cash.getData = _getData;
+cash.setData = _setData;

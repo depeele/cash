@@ -31,7 +31,7 @@ cash.fn.extend({
       classes
         ? this.each(el => {
             const spacedName = ` ${el.className} `;
-            cash.each( (classes,cls) => { _addClass(el,cls,spacedName); });
+            cash.each( classes, cls => { _addClass(el,cls,spacedName); });
           })
         : this
     );

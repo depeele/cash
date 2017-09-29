@@ -2,13 +2,15 @@
 cash.fn.extend({
 
   children(selector) {
-    const elems = cash.unique( this.map( el => el.children ) );
+    let elems = [];
+    this.each(el => { elems.push.apply(elems, el.children); });
+    elems = cash.unique(elems);
 
     return (
       !selector
         ? elems
         : elems.filter(el => {
-            return matches(el, selector);
+            return cash.matches(el, selector);
           })
     );
   },
@@ -86,7 +88,7 @@ cash.fn.extend({
       while ( last && last.parentNode && last !== doc.body.parentNode ) {
         last = last.parentNode;
 
-        if (!selector || (selector && matches(last, selector))) {
+        if (!selector || (selector && cash.matches(last, selector))) {
           result.push(last);
         }
       }
