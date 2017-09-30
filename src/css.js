@@ -37,8 +37,29 @@ const _getPrefixedProp  = (function() {
   };
 }());
 
+const _parseStyle = (function() {
+  const _propSepRe  = /\s*;\s*/;
+  const _kvRe       = /\s*:\s*/;
+
+  return function(str) {
+    const css = {};
+    if (cash.isString(str)) {
+      str.split( _propSepRe )
+        .forEach( kv => {
+          if (! kv) { return; }
+
+          const [key, val] = kv.split( _kvRe );
+          css[key] = val;
+        });
+    }
+
+    return css;
+  };
+}());
+
 cash.prefixedProp = _getPrefixedProp;
 cash.camelCase    = _camelCase;
+cash.parseStyle   = _parseStyle;
 
 cash.fn.extend({
 
