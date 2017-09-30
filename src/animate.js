@@ -588,7 +588,7 @@ cash.fn.extend({
   show(duration, complete) {
     if (duration == null && complete == null) {
       // Simple display change
-      return this.css('display', 'block');
+      return this.css('display', null);
     }
 
     // AKA fadeIn()
