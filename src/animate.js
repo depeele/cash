@@ -13,12 +13,19 @@
  *        quickest possible way, not the correct way.
  * @todo: support 'fill' property
  */
-/* jshint laxbreak: true, maxparams: 6 */
+/* jshint laxbreak:true, maxparams:6, eqnull:true, latedef:false */
 const _requestAnimationFrame = win.requestAnimationFrame ||
                                win.webkitRequestAnimationFrame;
 
 /** Group all `requestAnimationFrame` calls into one for better performance. */
 const _animations = [];
+
+function __error( err, context, opts ) {
+  console.warn('cash.animate:', err);
+  if (cash.isFunction(opts.complete)) {
+    opts.complete.call( context, context, {error: err} );
+  }
+}
 
 /** One requestAnimationFrame function */
 function _animate(){
@@ -155,14 +162,14 @@ function _buildStyles(obj, end ) {
   const props = {
     // Set start & end as empty objects to be filled
     start: {},
-    end: {}
+    end  : {},
   };
 
   /** If it's an element, we have to get the current styles */
   const start = win.getComputedStyle(obj);
 
   // Use the existing transform style for the start.
-  props.start[_transformProp] = start[_transformProp];
+  props.start[_transformProp] = start[_transformProp] || 'none';
   props.end[_transformProp]   = '';
 
   for (let key in end){
@@ -187,6 +194,9 @@ function _buildStyles(obj, end ) {
 
     }
 
+  }
+  if (! props.end[_transformProp]) {
+    props.end[_transformProp] = 'none';
   }
 
   return props;
@@ -239,8 +249,8 @@ function _renderViaElementAnimate( opts ) {
                         : null );
 
   // Use Element.animate to tween the properties.
-  const render    = opts.obj.animate( [opts.startValues, opts.endValues],
-                                      localOpts );
+  const render  = opts.obj.animate( [opts.startValues, opts.endValues],
+                                    localOpts );
 
   render.addEventListener('finish', function(){
 
@@ -269,7 +279,12 @@ function Animator( objects, keyframes, opts ) {
 
   opts.start.call( objects, objects );
 
-  __runKeyframe( keyframes[currentFrame] );
+  try {
+    __runKeyframe( keyframes[currentFrame] );
+  } catch(ex) {
+    __error( ex, objects, opts );
+  }
+
 
   /**********************************************************************
    * Context bound animation helpers {
@@ -352,9 +367,126 @@ function Animator( objects, keyframes, opts ) {
 }
 
 cash.animate = function( obj, end, opts ) {
+  if (! obj || ! obj.length) {
+    return __error( 'empty collection', obj, opts );
+  }
+
   return new Animator( obj, end, opts );
 };
 
 cash.fn.animate = function( end, opts ) {
+  if (! this.length) {
+    return __error( 'empty collection', this, opts );
+  }
+
   return new Animator( this, end, opts );
 };
+
+/***************************************************************
+ * jQuery Animations {
+ *
+ */
+
+const DURATION_DEFAULT  = 400;
+
+function __createOpts( duration, complete ) {
+  const opts  = {
+    duration: duration,
+    complete: complete,
+  };
+  if (cash.isFunction(duration)) {
+    opts.duration = DURATION_DEFAULT;
+    opts.complete = duration;
+
+  } else if (cash.isString(duration)) {
+    switch(duration.toLowerCase()) {
+    case 'fast':    opts.duration = 100;              break;
+    case 'normal':  opts.duration = DURATION_DEFAULT; break;
+    case 'slow':    opts.duration = 800;              break;
+    default:
+        // Remove any 'ms' suffix and default to 1.
+        opts.duration = parseFloat( duration ) || 1;
+        break;
+    }
+  }
+  return opts;
+}
+
+function __slide( direction, duration, complete ) {
+  const opts      = __createOpts( duration, complete );
+  const cStart    = opts.start;
+  const cComplete = opts.complete;
+  const start     = {   // starting state
+    overflow  : null,
+    height    : null,
+    transform : null,
+  };
+  const xfer      = {}; // state to transfer from up to down
+  const end       = {}; // ending state
+
+  opts.start = function( $el ) {
+    if (cStart) { cStart.call( $el, $el ); }
+
+    // Establish the target 'end' state
+    cash.extend( start, cash.parseStyle( $el.attr('style') ) );
+    delete start.display; // exclude 'display' from the state
+
+    if (direction === 'Down') {
+      cash.extend( end, $el.data('slideDown') || {} );
+
+      // Establish the initial starting state
+      $el.css( {
+        display : end.display || 'block',
+        height  : 0,
+        overflow: 'hidden',
+      });
+
+      $el.removeData('slideDown');
+
+    } else {
+      xfer.display = $el.css('display');
+      xfer.height  = $el.css('height');
+
+      end.display   = 'none';
+      end.overflow  = 'hidden';
+      end.height    = 0;
+
+      // Immediately change overflow
+      $el.css('overflow', 'hidden');
+
+      // Pass the original 'display' and 'height' to slideDown.
+      $el.data('slideDown', xfer);
+    }
+  };
+
+  opts.complete = function( $el, err ) {
+    // Resetting the element's inline styles to their pre-animation values.
+    $el.css( start );
+
+    if (cComplete)  { cComplete.call( $el, $el, err ); }
+  };
+
+  return this.animate( end, opts );
+}
+
+cash.fn.fadeIn = function(duration, complete) {
+  const opts  = __createOpts( duration, complete );
+  return this.animate( {opacity:1}, opts );
+};
+cash.fn.fadeOut = function(duration, complete) {
+  const opts  = __createOpts( duration, complete );
+  return this.animate( {opacity:0}, opts );
+};
+cash.fn.fadeTo = function(duration, opacity, complete) {
+  const opts  = __createOpts( duration, complete );
+  return this.animate( {opacity:opacity}, opts );
+};
+
+cash.fn.slideUp = function (duration, complete) {
+  return __slide.call( this, 'Up', duration, complete );
+};
+cash.fn.slideDown = function (duration, complete) {
+  return __slide.call( this, 'Down', duration, complete );
+};
+/* jQuery Animations }
+ ***************************************************************/
