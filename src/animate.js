@@ -389,6 +389,22 @@ cash.fn.animate = function( end, opts ) {
 
 const DURATION_DEFAULT  = 400;
 
+/**
+ *  Given optional 'duration' and 'complete' parameters, generate an options
+ *  object with proper values.
+ *  @method __createOpts
+ *  @param  [duration]    The duration {String | Number};
+ *  @param  [completion]  A callback to invoke upon completion of the animation
+ *                        {Function};
+ *
+ *  `duration` may be a time in ms or one of the following strings:
+ *    'fast'    : 100ms
+ *    'normal'  : 400ms
+ *    'slow'    : 800ms
+ *
+ *  @return A new animation options object {Object};
+ *  @private
+ */
 function __createOpts( duration, complete ) {
   const opts  = {
     duration: duration,
@@ -412,56 +428,155 @@ function __createOpts( duration, complete ) {
   return opts;
 }
 
+/**
+ *  SlideUp/Down
+ *  @method __slide
+ *  @param  direction     The slide direction (Up | Down) {String};
+ *  @param  [duration]    The duration {String | Number};
+ *  @param  [completion]  A callback to invoke upon completion of the animation
+ *                        {Function};
+ *
+ *  @return The animation;
+ *  @private
+ */
 function __slide( direction, duration, complete ) {
   const opts      = __createOpts( duration, complete );
   const cStart    = opts.start;
   const cComplete = opts.complete;
-  const start     = {   // starting state
-    overflow  : null,
+  const inline    = {   // maintain explicit inline styles
+    /* ensure that 'height', 'overflow' and 'transform' are removed on
+     * animation completion if not explicitly set in an inline style
+     */
     height    : null,
+    overflow  : null,
     transform : null,
   };
-  const xfer      = {}; // state to transfer from up to down
   const end       = {}; // ending state
 
   opts.start = function( $el ) {
     if (cStart) { cStart.call( $el, $el ); }
 
-    // Establish the target 'end' state
-    cash.extend( start, cash.parseStyle( $el.attr('style') ) );
-    delete start.display; // exclude 'display' from the state
+    /* Establish the target 'end' state.
+     *
+     * But first, extract any inline styles, excluding 'display'
+     */
+    cash.extend( inline, cash.parseStyle( $el.attr('style') ) );
+    delete inline.display; // exclude 'display' from the state
 
     if (direction === 'Down') {
-      cash.extend( end, $el.data('slideDown') || {} );
+      /* 'slideDown'
+       *
+       * Recover any end-state hints provided by 'slideUp'
+       */
+      const hints = $el.data('slideDown');
+      if (hints) {
+        $el.removeData('slideDown');
+        cash.extend( end, hints );
+      }
 
-      // Establish the initial starting state
+      if (! end.height) {
+        /* No idea how tall this element should be so move the element
+         * off-screen to get measurements so we can establish the
+         * target end-state for 'height'.
+         *
+         * Since we're effecting 'display', remember the starting value.
+         */
+        const display = $el.css('display');
+        if (display && display !== 'none') {
+          end.display = display;
+        }
+
+        $el.css( {
+          position: 'absolute',
+          top     : '-99999px',
+          left    : '-99999px',
+          display : 'block',
+        });
+        end.height = $el.css('height');
+      }
+
+      /* Establish the initial starting state, possibly moving the element back
+       * on-screen.
+       */
       $el.css( {
-        display : end.display || 'block',
+        position: inline.position || null,
+        top     : inline.top      || null,
+        left    : inline.left     || null,
+        display : (end.display === 'inline' ? 'inline-block' : 'block'),
         height  : 0,
         overflow: 'hidden',
       });
 
-      $el.removeData('slideDown');
-
     } else {
-      xfer.display = $el.css('display');
-      xfer.height  = $el.css('height');
+      /* 'slideUp'
+       *
+       * Retrieve the current 'display' and 'height' to pass as hints to
+       * 'slideDown'.
+       */
+      const hints = {
+        display : $el.css('display'),
+        height  : $el.css('height'),
+      };
 
-      end.display   = 'none';
-      end.overflow  = 'hidden';
-      end.height    = 0;
+      // Establish the target end-state
+      end.display = 'none';
+      end.height  = 0;
 
       // Immediately change overflow
       $el.css('overflow', 'hidden');
 
-      // Pass the original 'display' and 'height' to slideDown.
-      $el.data('slideDown', xfer);
+      // Pass the collected hints to 'slideDown'
+      $el.data('slideDown', hints);
     }
   };
 
   opts.complete = function( $el, err ) {
     // Resetting the element's inline styles to their pre-animation values.
-    $el.css( start );
+    $el.css( inline );
+
+    if (cComplete)  { cComplete.call( $el, $el, err ); }
+  };
+
+  return this.animate( end, opts );
+}
+
+/**
+ *  FadeIn/To/Out
+ *  @method __fade
+ *  @param  opacity       The target opacity {Number};
+ *  @param  [duration]    The duration {String | Number};
+ *  @param  [completion]  A callback to invoke upon completion of the animation
+ *                        {Function};
+ *
+ *  @return The animation;
+ *  @private
+ */
+function __fade( opacity, duration, complete ) {
+  const opts      = __createOpts( duration, complete );
+  const cStart    = opts.start;
+  const cComplete = opts.complete;
+  const inline    = {   // maintain explicit inline styles
+    /* ensure that 'transform' is removed on animation completion if not
+     * explicitly set in an inline style
+     */
+    transform : null,
+  };
+  const end       = { opacity: opacity };
+
+  opts.start = function( $el ) {
+    if (cStart) { cStart.call( $el, $el ); }
+
+    /* Establish the target 'end' state.
+     *
+     * But first, extract any inline styles, excluding 'opacity'
+     */
+    cash.extend( inline, cash.parseStyle( $el.attr('style') ) );
+    delete inline.opacity;
+  };
+
+  opts.complete = function( $el, err ) {
+    // Resetting the element's inline styles to their pre-animation values.
+    $el.css( inline );
 
     if (cComplete)  { cComplete.call( $el, $el, err ); }
   };
@@ -470,16 +585,13 @@ function __slide( direction, duration, complete ) {
 }
 
 cash.fn.fadeIn = function(duration, complete) {
-  const opts  = __createOpts( duration, complete );
-  return this.animate( {opacity:1}, opts );
+  return __fade.call( this, 1, duration, complete );
 };
 cash.fn.fadeOut = function(duration, complete) {
-  const opts  = __createOpts( duration, complete );
-  return this.animate( {opacity:0}, opts );
+  return __fade.call( this, 0, duration, complete );
 };
 cash.fn.fadeTo = function(duration, opacity, complete) {
-  const opts  = __createOpts( duration, complete );
-  return this.animate( {opacity:opacity}, opts );
+  return __fade.call( this, opacity, duration, complete );
 };
 
 cash.fn.slideUp = function (duration, complete) {
