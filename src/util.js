@@ -1,12 +1,28 @@
 /* jshint laxbreak: true */
 function _each(collection, callback) {
   const len   = collection.length;
-  let   idex  = 0;
 
-  for (; idex < len; idex++) {
-    if ( callback.call(collection[idex], collection[idex], idex, collection)
-                      === false ) {
-      break;
+  if (len === undefined) {
+    // Object iteration
+    for (let key in collection) {
+      const el  = collection[key];
+      /* Support jQuery's backwards parameter list for each over objects:
+       *    callback( key, val )  vs ES6 callback( val, key )
+       */
+      if ( callback.call( el, key, el, collection) === false ) {
+        break;
+      }
+    }
+
+  } else {
+    // Array iteration
+    let idex  = 0;
+
+    for (; idex < len; idex++) {
+      const el  = collection[idex];
+      if ( callback.call(el, el, idex, collection) === false ) {
+        break;
+      }
     }
   }
 }
