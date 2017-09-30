@@ -504,8 +504,29 @@
     };
   }());
   
+  const _parseStyle = (function() {
+    const _propSepRe  = /\s*;\s*/;
+    const _kvRe       = /\s*:\s*/;
+  
+    return function(str) {
+      const css = {};
+      if (cash.isString(str)) {
+        str.split( _propSepRe )
+          .forEach( kv => {
+            if (! kv) { return; }
+  
+            const [key, val] = kv.split( _kvRe );
+            css[key] = val;
+          });
+      }
+  
+      return css;
+    };
+  }());
+  
   cash.prefixedProp = _getPrefixedProp;
   cash.camelCase    = _camelCase;
+  cash.parseStyle   = _parseStyle;
   
   cash.fn.extend({
   
@@ -1006,12 +1027,19 @@
    *        quickest possible way, not the correct way.
    * @todo: support 'fill' property
    */
-  /* jshint laxbreak: true, maxparams: 6 */
+  /* jshint laxbreak:true, maxparams:6, eqnull:true, latedef:false */
   const _requestAnimationFrame = win.requestAnimationFrame ||
                                  win.webkitRequestAnimationFrame;
   
   /** Group all `requestAnimationFrame` calls into one for better performance. */
   const _animations = [];
+  
+  function __error( err, context, opts ) {
+    console.warn('cash.animate:', err);
+    if (cash.isFunction(opts.complete)) {
+      opts.complete.call( context, context, {error: err} );
+    }
+  }
   
   /** One requestAnimationFrame function */
   function _animate(){
@@ -1148,14 +1176,14 @@
     const props = {
       // Set start & end as empty objects to be filled
       start: {},
-      end: {}
+      end  : {},
     };
   
     /** If it's an element, we have to get the current styles */
     const start = win.getComputedStyle(obj);
   
     // Use the existing transform style for the start.
-    props.start[_transformProp] = start[_transformProp];
+    props.start[_transformProp] = start[_transformProp] || 'none';
     props.end[_transformProp]   = '';
   
     for (let key in end){
@@ -1180,6 +1208,9 @@
   
       }
   
+    }
+    if (! props.end[_transformProp]) {
+      props.end[_transformProp] = 'none';
     }
   
     return props;
@@ -1232,8 +1263,8 @@
                           : null );
   
     // Use Element.animate to tween the properties.
-    const render    = opts.obj.animate( [opts.startValues, opts.endValues],
-                                        localOpts );
+    const render  = opts.obj.animate( [opts.startValues, opts.endValues],
+                                      localOpts );
   
     render.addEventListener('finish', function(){
   
@@ -1262,7 +1293,12 @@
   
     opts.start.call( objects, objects );
   
-    __runKeyframe( keyframes[currentFrame] );
+    try {
+      __runKeyframe( keyframes[currentFrame] );
+    } catch(ex) {
+      __error( ex, objects, opts );
+    }
+  
   
     /**********************************************************************
      * Context bound animation helpers {
@@ -1345,12 +1381,241 @@
   }
   
   cash.animate = function( obj, end, opts ) {
+    if (! obj || ! obj.length) {
+      return __error( 'empty collection', obj, opts );
+    }
+  
     return new Animator( obj, end, opts );
   };
   
   cash.fn.animate = function( end, opts ) {
+    if (! this.length) {
+      return __error( 'empty collection', this, opts );
+    }
+  
     return new Animator( this, end, opts );
   };
+  
+  /***************************************************************
+   * jQuery Animations {
+   *
+   */
+  
+  const DURATION_DEFAULT  = 400;
+  
+  /**
+   *  Given optional 'duration' and 'complete' parameters, generate an options
+   *  object with proper values.
+   *  @method __createOpts
+   *  @param  [duration]    The duration {String | Number};
+   *  @param  [completion]  A callback to invoke upon completion of the animation
+   *                        {Function};
+   *
+   *  `duration` may be a time in ms or one of the following strings:
+   *    'fast'    : 100ms
+   *    'normal'  : 400ms
+   *    'slow'    : 800ms
+   *
+   *  @return A new animation options object {Object};
+   *  @private
+   */
+  function __createOpts( duration, complete ) {
+    const opts  = {
+      duration: duration,
+      complete: complete,
+    };
+    if (cash.isFunction(duration)) {
+      opts.duration = DURATION_DEFAULT;
+      opts.complete = duration;
+  
+    } else if (cash.isString(duration)) {
+      switch(duration.toLowerCase()) {
+      case 'fast':    opts.duration = 100;              break;
+      case 'normal':  opts.duration = DURATION_DEFAULT; break;
+      case 'slow':    opts.duration = 800;              break;
+      default:
+          // Remove any 'ms' suffix and default to 1.
+          opts.duration = parseFloat( duration ) || 1;
+          break;
+      }
+    }
+    return opts;
+  }
+  
+  /**
+   *  SlideUp/Down
+   *  @method __slide
+   *  @param  direction     The slide direction (Up | Down) {String};
+   *  @param  [duration]    The duration {String | Number};
+   *  @param  [completion]  A callback to invoke upon completion of the animation
+   *                        {Function};
+   *
+   *  @return The animation;
+   *  @private
+   */
+  function __slide( direction, duration, complete ) {
+    const opts      = __createOpts( duration, complete );
+    const cStart    = opts.start;
+    const cComplete = opts.complete;
+    const inline    = {   // maintain explicit inline styles
+      /* ensure that 'height', 'overflow' and 'transform' are removed on
+       * animation completion if not explicitly set in an inline style
+       */
+      height    : null,
+      overflow  : null,
+      transform : null,
+    };
+    const end       = {}; // ending state
+  
+    opts.start = function( $el ) {
+      if (cStart) { cStart.call( $el, $el ); }
+  
+      /* Establish the target 'end' state.
+       *
+       * But first, extract any inline styles, excluding 'display'
+       */
+      cash.extend( inline, cash.parseStyle( $el.attr('style') ) );
+      delete inline.display; // exclude 'display' from the state
+  
+      if (direction === 'Down') {
+        /* 'slideDown'
+         *
+         * Recover any end-state hints provided by 'slideUp'
+         */
+        const hints = $el.data('slideDown');
+        if (hints) {
+          $el.removeData('slideDown');
+          cash.extend( end, hints );
+        }
+  
+        if (! end.height) {
+          /* No idea how tall this element should be so move the element
+           * off-screen to get measurements so we can establish the
+           * target end-state for 'height'.
+           *
+           * Since we're effecting 'display', remember the starting value.
+           */
+          const display = $el.css('display');
+          if (display && display !== 'none') {
+            end.display = display;
+          }
+  
+          $el.css( {
+            position: 'absolute',
+            top     : '-99999px',
+            left    : '-99999px',
+            display : 'block',
+          });
+          end.height = $el.css('height');
+        }
+  
+        /* Establish the initial starting state, possibly moving the element back
+         * on-screen.
+         */
+        $el.css( {
+          position: inline.position || null,
+          top     : inline.top      || null,
+          left    : inline.left     || null,
+          display : (end.display === 'inline' ? 'inline-block' : 'block'),
+          height  : 0,
+          overflow: 'hidden',
+        });
+  
+      } else {
+        /* 'slideUp'
+         *
+         * Retrieve the current 'display' and 'height' to pass as hints to
+         * 'slideDown'.
+         */
+        const hints = {
+          display : $el.css('display'),
+          height  : $el.css('height'),
+        };
+  
+        // Establish the target end-state
+        end.display = 'none';
+        end.height  = 0;
+  
+        // Immediately change overflow
+        $el.css('overflow', 'hidden');
+  
+        // Pass the collected hints to 'slideDown'
+        $el.data('slideDown', hints);
+      }
+    };
+  
+    opts.complete = function( $el, err ) {
+      // Resetting the element's inline styles to their pre-animation values.
+      $el.css( inline );
+  
+      if (cComplete)  { cComplete.call( $el, $el, err ); }
+    };
+  
+    return this.animate( end, opts );
+  }
+  
+  /**
+   *  FadeIn/To/Out
+   *  @method __fade
+   *  @param  opacity       The target opacity {Number};
+   *  @param  [duration]    The duration {String | Number};
+   *  @param  [completion]  A callback to invoke upon completion of the animation
+   *                        {Function};
+   *
+   *  @return The animation;
+   *  @private
+   */
+  function __fade( opacity, duration, complete ) {
+    const opts      = __createOpts( duration, complete );
+    const cStart    = opts.start;
+    const cComplete = opts.complete;
+    const inline    = {   // maintain explicit inline styles
+      /* ensure that 'transform' is removed on animation completion if not
+       * explicitly set in an inline style
+       */
+      transform : null,
+    };
+    const end       = { opacity: opacity };
+  
+    opts.start = function( $el ) {
+      if (cStart) { cStart.call( $el, $el ); }
+  
+      /* Establish the target 'end' state.
+       *
+       * But first, extract any inline styles, excluding 'opacity'
+       */
+      cash.extend( inline, cash.parseStyle( $el.attr('style') ) );
+      delete inline.opacity;
+    };
+  
+    opts.complete = function( $el, err ) {
+      // Resetting the element's inline styles to their pre-animation values.
+      $el.css( inline );
+  
+      if (cComplete)  { cComplete.call( $el, $el, err ); }
+    };
+  
+    return this.animate( end, opts );
+  }
+  
+  cash.fn.fadeIn = function(duration, complete) {
+    return __fade.call( this, 1, duration, complete );
+  };
+  cash.fn.fadeOut = function(duration, complete) {
+    return __fade.call( this, 0, duration, complete );
+  };
+  cash.fn.fadeTo = function(duration, opacity, complete) {
+    return __fade.call( this, opacity, duration, complete );
+  };
+  
+  cash.fn.slideUp = function (duration, complete) {
+    return __slide.call( this, 'Up', duration, complete );
+  };
+  cash.fn.slideDown = function (duration, complete) {
+    return __slide.call( this, 'Down', duration, complete );
+  };
+  /* jQuery Animations }
+   ***************************************************************/
   
 
   return cash;
