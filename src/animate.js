@@ -584,21 +584,43 @@ function __fade( opacity, duration, complete ) {
   return this.animate( end, opts );
 }
 
-cash.fn.fadeIn = function(duration, complete) {
-  return __fade.call( this, 1, duration, complete );
-};
-cash.fn.fadeOut = function(duration, complete) {
-  return __fade.call( this, 0, duration, complete );
-};
-cash.fn.fadeTo = function(duration, opacity, complete) {
-  return __fade.call( this, opacity, duration, complete );
-};
+cash.fn.extend({
+  show(duration, complete) {
+    if (duration == null && complete == null) {
+      // Simple display change
+      return this.css('display', 'block');
+    }
 
-cash.fn.slideUp = function (duration, complete) {
-  return __slide.call( this, 'Up', duration, complete );
-};
-cash.fn.slideDown = function (duration, complete) {
-  return __slide.call( this, 'Down', duration, complete );
-};
+    // AKA fadeIn()
+    return __fade.call( this, 1, duration, complete );
+  },
+  hide(duration, complete) {
+    if (duration == null && complete == null) {
+      // Simple display change
+      return this.css('display', 'none');
+    }
+
+    // AKA fadeOut()
+    return __fade.call( this, 0, duration, complete );
+  },
+
+  fadeIn(duration, complete) {
+    return __fade.call( this, 1, duration, complete );
+  },
+  fadeOut(duration, complete) {
+    return __fade.call( this, 0, duration, complete );
+  },
+  fadeTo(duration, opacity, complete) {
+    return __fade.call( this, opacity, duration, complete );
+  },
+
+  slideUp(duration, complete) {
+    return __slide.call( this, 'Up', duration, complete );
+  },
+  slideDown(duration, complete) {
+    return __slide.call( this, 'Down', duration, complete );
+  }
+});
+
 /* jQuery Animations }
  ***************************************************************/
