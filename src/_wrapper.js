@@ -31,6 +31,7 @@
 
   // @include ./animate.js
   // @include ./deepExtend.js
+  // @include ./scroll.js
 
   return cash;
 });

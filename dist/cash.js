@@ -18,6 +18,7 @@
 
   /* jshint laxbreak: true */
   const _noop       = function(){};
+  const _isWindow   = function(item) { return item === win; };
   const _isFunction = function(item) {
           // @see https://crbug.com/568448
           return typeof item === typeof _noop && item.call;
@@ -28,6 +29,7 @@
   const _classRe    = /^\.[\w-]*$/;
   const _htmlRe     =  /<.+>/;
   const _singletRe  = /^\w+$/;
+  const _tagRe      = /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i;
   
   function _find( selector, context ) {
     context = context || doc;
@@ -50,8 +52,13 @@
       _frag.head.appendChild(base);
     }
   
-    _frag.body.innerHTML = str;
+    const parsed  = _tagRe.exec( str );
+    if (parsed) {
+      // Single tag
+      return [ _frag.createElement( parsed[1] ) ];
+    }
   
+    _frag.body.innerHTML = str;
     return _frag.body.childNodes;
   }
   
@@ -126,6 +133,7 @@
     fn          : { value: cash.prototype },
     parseHTML   : { value: _parseHTML },
     noop        : { value: _noop },
+    isWindow    : { value: _isWindow },
     isFunction  : { value: _isFunction },
     isString    : { value: _isString },
     find        : { value: _find },
@@ -136,12 +144,28 @@
   /* jshint laxbreak: true */
   function _each(collection, callback) {
     const len   = collection.length;
-    let   idex  = 0;
   
-    for (; idex < len; idex++) {
-      if ( callback.call(collection[idex], collection[idex], idex, collection)
-                        === false ) {
-        break;
+    if (len === undefined) {
+      // Object iteration
+      for (let key in collection) {
+        const el  = collection[key];
+        /* Support jQuery's backwards parameter list for each over objects:
+         *    callback( key, val )  vs ES6 callback( val, key )
+         */
+        if ( callback.call( el, key, el, collection) === false ) {
+          break;
+        }
+      }
+  
+    } else {
+      // Array iteration
+      let idex  = 0;
+  
+      for (; idex < len; idex++) {
+        const el  = collection[idex];
+        if ( callback.call(el, el, idex, collection) === false ) {
+          break;
+        }
       }
     }
   }
@@ -557,18 +581,31 @@
   
     const lower = prop.toLowerCase();
   
-    cash.fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
+    cash.fn[lower] = function(){
+      const el  = this[0];
+      return (cash.isWindow(el)
+                ? el.document.documentElement['client'+ prop]
+                : el.getBoundingClientRect()[lower]);
+    };
   
-    cash.fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
+    cash.fn['inner' + prop] = function(){
+      const el  = this[0];
+      return (cash.isWindow(el)
+                ? el.document.documentElement['client'+ prop]
+                : el['client' + prop]);
+    };
   
     cash.fn['outer' + prop] = function(margins) {
-      return this[0]['offset' + prop] +
-              ( margins
-                  ?  _compute(this, 'margin' + ( prop === 'Width'
-                                                  ? 'Left' : 'Top' )) +
-                     _compute(this, 'margin' + ( prop === 'Width'
-                                                  ? 'Right' : 'Bottom' ))
-                  : 0 );
+      const el  = this[0];
+      return (cash.isWindow(el)
+                ? el['inner'+ prop]
+                : el['offset' + prop] +
+                  ( margins
+                    ?  _compute(this, 'margin' + ( prop === 'Width'
+                                                    ? 'Left' : 'Top' )) +
+                       _compute(this, 'margin' + ( prop === 'Width'
+                                                    ? 'Right' : 'Bottom' ))
+                    : 0 ));
     };
   
   });
@@ -705,7 +742,7 @@
       case 'checkbox':
         return (el.checked ? el.value : null);
       default:
-        return (el.value   ? el.value : null);
+        return (cash.isString(el.value) ? el.value : null);
     }
   }
   
@@ -1783,6 +1820,43 @@
   
     return _extend.apply( this, arguments );
   };
+  
+  /* jshint laxbreak: true */
+  
+  // Create scrollLeft and scrollTop methods
+  cash.each({scrollLeft:'pageXOffset',scrollTop:'pageYOffset'}, (method,prop)=> {
+    const top   = (prop === 'pageYOffset');
+  
+    cash.fn[ method ] = function( val ) {
+      this.each( function() {
+        let elWin;
+        if (cash.isWindow(this)) {
+          elWin = this;
+  
+        } else if (this.nodeType === 9) {
+          elWin = this.defaultView;
+        }
+  
+        if (val === undefined) {
+          return (elWin ? elWin[ prop ] : this[ method ]);
+        }
+  
+        if (elWin) {
+          elWin.scrollTo(
+            (!top ? val : elWin.pageXOffset),
+            ( top ? val : elWin.pageYOffset)
+          );
+  
+        } else {
+          this[ method ] = val;
+  
+        }
+      });
+  
+      return this;
+    };
+  
+  });
   
 
   return cash;
