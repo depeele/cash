@@ -32,7 +32,7 @@ function _getValue(el) {
     case 'checkbox':
       return (el.checked ? el.value : null);
     default:
-      return (el.value   ? el.value : null);
+      return (cash.isString(el.value) ? el.value : null);
   }
 }
 
