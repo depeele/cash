@@ -1,5 +1,6 @@
 /* jshint laxbreak: true */
 const _noop       = function(){};
+const _isWindow   = function(item) { return item === win; };
 const _isFunction = function(item) {
         // @see https://crbug.com/568448
         return typeof item === typeof _noop && item.call;
@@ -114,6 +115,7 @@ Object.defineProperties( cash, {
   fn          : { value: cash.prototype },
   parseHTML   : { value: _parseHTML },
   noop        : { value: _noop },
+  isWindow    : { value: _isWindow },
   isFunction  : { value: _isFunction },
   isString    : { value: _isString },
   find        : { value: _find },
