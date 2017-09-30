@@ -10,6 +10,7 @@ const _idRe       = /^#[\w-]*$/;
 const _classRe    = /^\.[\w-]*$/;
 const _htmlRe     =  /<.+>/;
 const _singletRe  = /^\w+$/;
+const _tagRe      = /^<([a-z][^\/\0>:\x20\t\r\n\f]*)[\x20\t\r\n\f]*\/?>(?:<\/\1>|)$/i;
 
 function _find( selector, context ) {
   context = context || doc;
@@ -32,8 +33,13 @@ function _parseHTML(str) {
     _frag.head.appendChild(base);
   }
 
-  _frag.body.innerHTML = str;
+  const parsed  = _tagRe.exec( str );
+  if (parsed) {
+    // Single tag
+    return [ _frag.createElement( parsed[1] ) ];
+  }
 
+  _frag.body.innerHTML = str;
   return _frag.body.childNodes;
 }
 
