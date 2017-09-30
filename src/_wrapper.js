@@ -30,6 +30,7 @@
   // @include ./traversal.js
 
   // @include ./animate.js
+  // @include ./deepExtend.js
 
   return cash;
 });

@@ -37,7 +37,7 @@ gulp.task('lint', function() {
 });
 
 gulp.task('test', function() {
-  return gulp.src('./test/index.html')
+  return gulp.src('./test/qunit/index.html')
     .pipe($.qunit());
 });
 
