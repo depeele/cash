@@ -7,18 +7,31 @@ cash.each(['Width','Height'], prop => {
 
   const lower = prop.toLowerCase();
 
-  cash.fn[lower] = function(){ return this[0].getBoundingClientRect()[lower]; };
+  cash.fn[lower] = function(){
+    const el  = this[0];
+    return (cash.isWindow(el)
+              ? el.document.documentElement['client'+ prop]
+              : el.getBoundingClientRect()[lower]);
+  };
 
-  cash.fn['inner' + prop] = function(){ return this[0]['client' + prop]; };
+  cash.fn['inner' + prop] = function(){
+    const el  = this[0];
+    return (cash.isWindow(el)
+              ? el.document.documentElement['client'+ prop]
+              : el['client' + prop]);
+  };
 
   cash.fn['outer' + prop] = function(margins) {
-    return this[0]['offset' + prop] +
-            ( margins
-                ?  _compute(this, 'margin' + ( prop === 'Width'
-                                                ? 'Left' : 'Top' )) +
-                   _compute(this, 'margin' + ( prop === 'Width'
-                                                ? 'Right' : 'Bottom' ))
-                : 0 );
+    const el  = this[0];
+    return (cash.isWindow(el)
+              ? el['inner'+ prop]
+              : el['offset' + prop] +
+                ( margins
+                  ?  _compute(this, 'margin' + ( prop === 'Width'
+                                                  ? 'Left' : 'Top' )) +
+                     _compute(this, 'margin' + ( prop === 'Width'
+                                                  ? 'Right' : 'Bottom' ))
+                  : 0 ));
   };
 
 });
