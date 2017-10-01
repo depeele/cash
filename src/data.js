@@ -1,8 +1,6 @@
 /* jshint laxbreak: true */
-const uid = cash.uid = '_cash'+Date.now();
-
 function _getDataCache(node) {
-  return (node[uid] = node[uid] || {});
+  return (node[cash.uid] = node[cash.uid] || {});
 }
 
 function _setData(node, key, value) {

@@ -112,6 +112,7 @@ Object.defineProperties( cash.prototype, {
 });
 
 Object.defineProperties( cash, {
+  uid         : { value: '_cash'+ Date.now() },
   fn          : { value: cash.prototype },
   parseHTML   : { value: _parseHTML },
   noop        : { value: _noop },
