@@ -7,14 +7,25 @@ cash.each(['Width','Height'], prop => {
 
   const lower = prop.toLowerCase();
 
-  cash.fn[lower] = function(){
+  cash.fn[lower] = function( val ) {
     const el  = this[0];
-    return (cash.isWindow(el)
-              ? el.document.documentElement['client'+ prop]
-              : el.getBoundingClientRect()[lower]);
+    if (cash.isWindow(el)) {
+      return el.document.documentElement['client'+ prop];
+
+    } else {
+      if (val === undefined) {
+        // get
+        return el.getBoundingClientRect()[lower];
+
+      } else {
+        // set
+        el.style[lower] = val;
+        return this;
+      }
+    }
   };
 
-  cash.fn['inner' + prop] = function(){
+  cash.fn['inner' + prop] = function() {
     const el  = this[0];
     return (cash.isWindow(el)
               ? el.document.documentElement['client'+ prop]
