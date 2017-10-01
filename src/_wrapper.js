@@ -27,6 +27,9 @@
   // @include ./forms.js
   // @include ./manipulation.js
   // @include ./offset.js
+
+  // @include ./pseudos.js
+
   // @include ./traversal.js
 
   // @include ./animate.js

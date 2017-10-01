@@ -24,9 +24,20 @@ cash.fn.extend({
   is(selector) {
     if ( !selector ) { return false; }
 
-    const comparator  = cash.selectComparator(selector);
-    let   match       = false;
+    let comparator  = cash.selectComparator(selector);
 
+    if (cash._pseudos && selector[0] === ':') {
+      const pseudoFn  = cash._pseudos[ selector.slice(1) ];
+      if (! cash.isFunction(pseudoFn)) {
+        console.error('unsupported pseudo: '+ selector);
+
+      } else {
+        comparator = pseudoFn;
+
+      }
+    }
+
+    let match = false;
     this.each(el => {
       match = comparator( el,selector );
       return !match;
@@ -40,10 +51,23 @@ cash.fn.extend({
       return cash( selector && this.has(selector).length ? selector : null );
     }
 
-    const elems = [];
-    this.each(el => {
-      elems.push.apply( elems, cash.find(selector, el) );
-    } );
+    let elems = [];
+    if (cash._pseudos && selector[0] === ':') {
+      const pseudoFn  = cash._pseudos[ selector.slice(1) ];
+      if (! cash.isFunction(pseudoFn)) {
+        console.error('unsupported pseudo: '+ selector);
+
+      } else {
+        elems = this.filter(el => pseudoFn( el ));
+
+      }
+
+    } else {
+
+      this.each(el => {
+        elems.push.apply( elems, cash.find(selector, el) );
+      } );
+    }
 
     return cash.unique(elems);
   },
