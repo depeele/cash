@@ -642,7 +642,9 @@
   
     eventCache[eventName] = eventCache[eventName] || [];
     eventCache[eventName].push(callback);
-    node.addEventListener(eventName, callback);
+  
+    const baseName    = eventName.split('.').shift();
+    node.addEventListener(baseName, callback);
   }
   
   function _removeEvent(node, eventName, callback) {
