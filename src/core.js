@@ -111,6 +111,20 @@ Object.defineProperties( cash.prototype, {
   ready       : _onReady,
 });
 
+function _proxy( fn, context ) {
+  if (cash.isString(context)) {
+    // Bind a named method
+    const tmp = fn[ context ];
+    context   = fn;
+    fn        = tmp;
+  }
+  if (! cash.isFunction( fn )) {
+    return undefined;
+  }
+
+  return fn.bind( context );
+}
+
 Object.defineProperties( cash, {
   uid         : { value: '_cash'+ Date.now() },
   fn          : { value: cash.prototype },
@@ -120,6 +134,7 @@ Object.defineProperties( cash, {
   isFunction  : { value: _isFunction },
   isString    : { value: _isString },
   find        : { value: _find },
+  proxy       : { value: _proxy },
 });
 
 Init.prototype = cash.prototype;
