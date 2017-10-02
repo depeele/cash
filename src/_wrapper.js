@@ -27,14 +27,12 @@
   // @include ./forms.js
   // @include ./manipulation.js
   // @include ./offset.js
-
-  // @include ./pseudos.js
-
   // @include ./traversal.js
 
   // @include ./animate.js
   // @include ./deepExtend.js
   // @include ./scroll.js
+  // @include ./pseudos.js
 
   return cash;
 });
