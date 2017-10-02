@@ -112,6 +112,9 @@ cash.fn.extend({
   text(content) {
     if ( content === undefined ) { return this[0].textContent; }
     return this.each(el => el.textContent = content);
-  }
+  },
 
+  detach() {
+    return this.remove();
+  },
 });
