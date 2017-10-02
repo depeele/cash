@@ -44,6 +44,18 @@ function _parseHTML(str) {
   return _frag.body.childNodes;
 }
 
+
+function _contains( container, target ) {
+  const containerEl   = (container.nodeType === 9
+                          ? container.documentElement
+                          : container);
+  const targetParent  = (target && target.parentNode);
+
+  return (container === targetParent ||
+          !!( targetParent && targetParent.nodeType === 1 &&
+              containerEl.contains( targetParent ) ) );
+}
+
 function _onReady(fn) {
   if ( doc.readyState !== 'loading' ) { fn(); }
   else { doc.addEventListener('DOMContentLoaded', fn); }
@@ -135,6 +147,7 @@ Object.defineProperties( cash, {
   isString    : { value: _isString },
   find        : { value: _find },
   proxy       : { value: _proxy },
+  contains    : { value: _contains },
 });
 
 Init.prototype = cash.prototype;
