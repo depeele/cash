@@ -24,20 +24,8 @@ cash.fn.extend({
   is(selector) {
     if ( !selector ) { return false; }
 
-    let comparator  = cash.selectComparator(selector);
-
-    if (cash._pseudos && selector[0] === ':') {
-      const pseudoFn  = cash._pseudos[ selector.slice(1) ];
-      if (! cash.isFunction(pseudoFn)) {
-        console.error('unsupported pseudo: '+ selector);
-
-      } else {
-        comparator = pseudoFn;
-
-      }
-    }
-
-    let match = false;
+    const comparator  = cash.selectComparator(selector);
+    let   match       = false;
     this.each(el => {
       match = comparator( el,selector );
       return !match;
