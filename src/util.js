@@ -28,13 +28,31 @@ function _each(collection, callback) {
 }
 
 function _matches( el, selector ) {
-  const match = el && (
-    el.matches ||
-    el.webkitMatchesSelector ||
-    el.mozMatchesSelector ||
-    el.msMatchesSelector ||
-    el.oMatchesSelector
-  );
+  let match;
+  if (el) {
+    if (cash._pseudos && selector[0] === ':') {
+      // Use a pseudo selector matcher
+      const pseudoFn  = cash._pseudos[ selector.slice(1) ];
+      if (! cash.isFunction(pseudoFn)) {
+        console.error('unsupported pseudo: '+ selector);
+
+      } else {
+        match = pseudoFn;
+
+      }
+
+    } else {
+      // Use a browser matcher
+      match = (
+        el.matches ||
+        el.webkitMatchesSelector ||
+        el.mozMatchesSelector ||
+        el.msMatchesSelector ||
+        el.oMatchesSelector
+      );
+    }
+  }
+
   return !!match && match.call(el, selector);
 }
 
