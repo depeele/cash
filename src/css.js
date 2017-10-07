@@ -61,11 +61,34 @@ cash.prefixedProp = _getPrefixedProp;
 cash.camelCase    = _camelCase;
 cash.parseStyle   = _parseStyle;
 
+// CSS properties that MAY be a number
+cash.cssNumber    = {
+  animationIterationCount : true,
+  columnCount             : true,
+  fillOpacity             : true,
+  flexGrow                : true,
+  flexShrink              : true,
+  fontWeight              : true,
+  lineHeight              : true,
+  opacity                 : true,
+  order                   : true,
+  orphans                 : true,
+  widows                  : true,
+  zIndex                  : true,
+  zoom                    : true,
+};
+
 cash.fn.extend({
 
   css(prop,value){
     if ( cash.isString(prop) ) {
       prop = _getPrefixedProp(prop);
+
+      // If 'value' is a number and does NOT appear in cssNumber, append 'px'
+      if (typeof(value) === 'number' && ! cash.cssNumber[prop]) {
+        value = value +'px';
+      }
+
       return ( arguments.length > 1 ?
         this.each(el => el.style[prop] = value ) :
         win.getComputedStyle(this[0])[prop]
