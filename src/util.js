@@ -1,4 +1,4 @@
-/* jshint laxbreak: true */
+/* jshint laxbreak: true, eqnull: true */
 function _each(collection, callback) {
   const len   = collection.length;
 
@@ -90,9 +90,22 @@ cash.extend = cash.fn.extend = function(target) {
   }
 
   for (; idex < length; idex++) {
-    if (!args[idex]) { continue; }
-    for (let key in args[idex]) {
-      if ( args[idex].hasOwnProperty(key) ) { target[key] = args[idex][key]; }
+    const arg = args[idex];
+
+    // Only deal with non-null/undefined values
+    if (arg == null)  { continue; }
+
+    for (let key in arg) {
+      /* :XXX: Do NOT use hasOwnProperty so we can actually extend DOM-related
+       * instances (e.g. DOMRect)
+       *  if ( arg.hasOwnProperty(key) ) {
+       *    target[key] = arg[key];
+       *  }
+       */
+      const copy  = arg[ key ];
+      if ( copy !== undefined ) {
+        target[ key ] = copy;
+      }
     }
   }
 
