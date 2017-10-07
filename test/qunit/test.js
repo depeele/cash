@@ -238,6 +238,10 @@ QUnit.test( "css", function( assert ) {
   assert.equal($('.css-fixture').css('height'), '100px', "css write Passed!" );
   $('.css-fixture').css({height: '50px', width: '100px'});
   assert.equal($('.css-fixture').css('width'), '100px', "css write many Passed!" );
+
+  // Should properly append 'px'
+  $('.css-fixture').css({top: 50, left: 100});
+  assert.equal($('.css-fixture').css('top'), '50px', "css write raw number Passed!" );
 });
 
 //Data
