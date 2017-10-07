@@ -346,11 +346,11 @@ QUnit.test( "trigger(data)", function( assert ) {
 //Forms
 
 QUnit.test( "serialize", function( assert ) {
-  var data = $('.form-fixture').serialize();
-  assert.equal(data, "hidden=5&text=text&checkbox-yes=yes&radio=yes&select=selected&select-multiple=option-1&select-multiple=option-2", "serialize Passed!" );
+  var data    = $('.form-fixture').serialize();
+  var expect  = "hidden=5&text=text&checkbox-yes=yes&radio=yes&select=selected&select-multiple=option-1&select-multiple=option-2";
 
-  data = $( ".form-fixture input, .form-fixture textarea, .form-fixture select" ).serialize();
-  assert.equal(data, "hidden=5&text=text&checkbox-yes=yes&radio=yes&select=selected&select-multiple=option-1&select-multiple=option-2", "serialize Passed!" );
+  assert.equal(data, expect, "serialize Passed!" );
+  assert.equal(data, expect, "serialize Passed!" );
 });
 
 QUnit.test( "serialize control elements", function( assert ) {

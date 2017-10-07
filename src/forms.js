@@ -62,7 +62,7 @@ cash.fn.extend({
           break;
         default:
           const value = _getValue(el);
-          if (value !== null) {
+          if (value !== null && value !== '') {
             query += _encode(name, value);
           }
       }
