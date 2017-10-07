@@ -170,7 +170,7 @@
   
   Init.prototype = cash.prototype;
   
-  /* jshint laxbreak: true */
+  /* jshint laxbreak: true, eqnull: true */
   function _each(collection, callback) {
     const len   = collection.length;
   
@@ -262,9 +262,22 @@
     }
   
     for (; idex < length; idex++) {
-      if (!args[idex]) { continue; }
-      for (let key in args[idex]) {
-        if ( args[idex].hasOwnProperty(key) ) { target[key] = args[idex][key]; }
+      const arg = args[idex];
+  
+      // Only deal with non-null/undefined values
+      if (arg == null)  { continue; }
+  
+      for (let key in arg) {
+        /* :XXX: Do NOT use hasOwnProperty so we can actually extend DOM-related
+         * instances (e.g. DOMRect)
+         *  if ( arg.hasOwnProperty(key) ) {
+         *    target[key] = arg[key];
+         *  }
+         */
+        const copy  = arg[ key ];
+        if ( copy !== undefined ) {
+          target[ key ] = copy;
+        }
       }
     }
   
@@ -296,7 +309,7 @@
   
   });
   
-  /* jshint laxbreak: true */
+  /* jshint laxbreak: true, eqnull: true */
   function _getDataCache(node) {
     return (node[cash.uid] = node[cash.uid] || {});
   }
@@ -307,6 +320,12 @@
   
   function _getData(node, key) {
     const cache = _getDataCache(node);
+    if (key == null) {
+      // Retrieve ALL data
+      return (node.dataset
+              ? node.dataset
+              : cache);
+    }
     if ( cache[key] === undefined ) {
       cache[key] = (node.dataset
                       ? node.dataset[key]
@@ -317,16 +336,17 @@
   
   function _removeData(node, key) {
     const cache = _getDataCache(node);
-    if ( cache )             { delete cache[key]; }
-    else if ( node.dataset ) { delete node.dataset[key]; }
-    else                     { cash(node).removeAttr('data-' + name); }
+    if ( cache )        { delete cache[key]; }
+  
+    if ( node.dataset ) { delete node.dataset[key]; }
+    else                { cash(node).removeAttr('data-' + name); }
   }
   
   cash.fn.extend({
   
     data(name, value) {
   
-      if ( cash.isString(name) ) {
+      if ( cash.isString(name) || name == null ) {
         return ( value === undefined
                   ?  _getData(this[0],name)
                   : this.each(el => _setData(el,name,value) )
@@ -911,7 +931,7 @@
             break;
           default:
             const value = _getValue(el);
-            if (value !== null) {
+            if (value !== null && value !== '') {
               query += _encode(name, value);
             }
         }
@@ -2053,6 +2073,8 @@
     const top   = (prop === 'pageYOffset');
   
     cash.fn[ method ] = function( val ) {
+      let res = this;
+  
       this.each( function() {
         let elWin;
         if (cash.isWindow(this)) {
@@ -2063,7 +2085,8 @@
         }
   
         if (val === undefined) {
-          return (elWin ? elWin[ prop ] : this[ method ]);
+          res = (elWin ? elWin[ prop ] : this[ method ]);
+          return res;
         }
   
         if (elWin) {
@@ -2078,7 +2101,7 @@
         }
       });
   
-      return this;
+      return res;
     };
   
   });
