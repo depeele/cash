@@ -5,6 +5,8 @@ cash.each({scrollLeft:'pageXOffset',scrollTop:'pageYOffset'}, (method,prop)=> {
   const top   = (prop === 'pageYOffset');
 
   cash.fn[ method ] = function( val ) {
+    let res = this;
+
     this.each( function() {
       let elWin;
       if (cash.isWindow(this)) {
@@ -15,7 +17,8 @@ cash.each({scrollLeft:'pageXOffset',scrollTop:'pageYOffset'}, (method,prop)=> {
       }
 
       if (val === undefined) {
-        return (elWin ? elWin[ prop ] : this[ method ]);
+        res = (elWin ? elWin[ prop ] : this[ method ]);
+        return res;
       }
 
       if (elWin) {
@@ -30,7 +33,7 @@ cash.each({scrollLeft:'pageXOffset',scrollTop:'pageYOffset'}, (method,prop)=> {
       }
     });
 
-    return this;
+    return res;
   };
 
 });
