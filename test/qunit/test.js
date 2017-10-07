@@ -351,7 +351,9 @@ QUnit.test( "val", function( assert ) {
   var $col  = $('input[type=text]').not('[id]');  // Remove '#qunit-filter-input'
   assert.equal($col.val(), "text", "val get Passed!" );
   $col.val(0);
-  assert.equal($col.val(), 0, "val set Passed!" );
+  assert.equal($col.val(), 0, "val set 0 Passed!" );
+  $col.val('');
+  assert.equal($col.val(), '', "val set '' Passed!" );
 });
 
 //Traversal
