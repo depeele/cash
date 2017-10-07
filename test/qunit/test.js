@@ -243,11 +243,22 @@ QUnit.test( "css", function( assert ) {
 //Data
 
 QUnit.test( "data", function( assert ) {
-  assert.equal($('.attr-fixture').data('index'), 5, "data read Passed!" );
-  $('.attr-fixture').data('index',10);
-  assert.equal($('.attr-fixture').data('index'), 10, "data set Passed!" );
-  $('.attr-fixture').removeData('index');
-  assert.notEqual($('.attr-fixture').data('index'), 10, "data remove Passed!" );
+  const $fixture  = $('.attr-fixture');
+
+  assert.equal($fixture.data('index'), 5, "data read Passed!" );
+
+  let data = $fixture.data();
+  if ($fixture[0].dataset) {
+    // Data will be a DOMStringMap, convert to a simple object
+    data = JSON.parse( JSON.stringify(data) );
+
+  }
+  assert.deepEqual(data, {index:'5'}, "data() Passed!" );
+
+  $fixture.data('index',10);
+  assert.equal($fixture.data('index'), 10, "data set Passed!" );
+  $fixture.removeData('index');
+  assert.notEqual($fixture.data('index'), 10, "data remove Passed!" );
 });
 
 //Dimensions
